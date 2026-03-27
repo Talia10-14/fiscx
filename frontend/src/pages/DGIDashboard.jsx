@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { FiCheck, FiAlertCircle, FiTrendingUp, FiUsers, FiBarChart2, FiFileText } from 'react-icons/fi';
 import { useAuthStore } from '../stores/authStore';
 import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
@@ -96,11 +97,22 @@ export default function DGIDashboard() {
   };
 
   const tabs = [
-    { id: 'dashboard', label: '📊 Tableau de bord', icon: '📊' },
-    { id: 'bilans', label: '📝 Bilans SYSCOHADA', icon: '📝' },
-    { id: 'declarations', label: '📋 Déclarations', icon: '📋' },
-    { id: 'analytics', label: '📈 Analytique', icon: '📈' },
+    { id: 'dashboard', label: 'Tableau de bord' },
+    { id: 'bilans', label: 'Bilans SYSCOHADA' },
+    { id: 'declarations', label: 'Déclarations' },
+    { id: 'analytics', label: 'Analytique' },
   ];
+
+  const getTabIcon = (tabId) => {
+    const iconProps = { size: 18, style: { marginRight: 8 } };
+    switch (tabId) {
+      case 'dashboard': return <FiBarChart2 {...iconProps} />;
+      case 'bilans': return <FiFileText {...iconProps} />;
+      case 'declarations': return <FiCheck {...iconProps} />;
+      case 'analytics': return <FiTrendingUp {...iconProps} />;
+      default: return null;
+    }
+  };
 
   const renderView = () => {
     switch (view) {
@@ -347,10 +359,13 @@ export default function DGIDashboard() {
                 cursor: 'pointer',
                 whiteSpace: 'nowrap',
                 transition: 'all .2s',
+                display: 'flex',
+                alignItems: 'center',
               }}
               onMouseEnter={e => view !== tab.id && (e.currentTarget.style.color = '#111a13')}
               onMouseLeave={e => view !== tab.id && (e.currentTarget.style.color = '#6b7280')}
             >
+              {getTabIcon(tab.id)}
               {tab.label}
             </button>
           ))}

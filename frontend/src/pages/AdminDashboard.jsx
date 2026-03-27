@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { FiBarChart2, FiUsers, FiSettings, FiFileText } from 'react-icons/fi';
 import { useAuthStore } from '../stores/authStore';
 import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
@@ -71,11 +72,22 @@ export default function AdminDashboard() {
   };
 
   const tabs = [
-    { id: 'dashboard', label: '📊 Tableau de bord', icon: '📊' },
-    { id: 'users', label: '👥 Utilisateurs', icon: '👥' },
-    { id: 'config', label: '⚙️ Configuration', icon: '⚙️' },
-    { id: 'audit', label: '📋 Journaux d\'audit', icon: '📋' },
+    { id: 'dashboard', label: 'Tableau de bord' },
+    { id: 'users', label: 'Utilisateurs' },
+    { id: 'config', label: 'Configuration' },
+    { id: 'audit', label: 'Journaux d\'audit' },
   ];
+
+  const getTabIcon = (tabId) => {
+    const iconProps = { size: 18, style: { marginRight: 8 } };
+    switch (tabId) {
+      case 'dashboard': return <FiBarChart2 {...iconProps} />;
+      case 'users': return <FiUsers {...iconProps} />;
+      case 'config': return <FiSettings {...iconProps} />;
+      case 'audit': return <FiFileText {...iconProps} />;
+      default: return null;
+    }
+  };
 
   const renderView = () => {
     switch (view) {
@@ -295,10 +307,13 @@ export default function AdminDashboard() {
                 cursor: 'pointer',
                 whiteSpace: 'nowrap',
                 transition: 'all .2s',
+                display: 'flex',
+                alignItems: 'center',
               }}
               onMouseEnter={e => view !== tab.id && (e.currentTarget.style.color = '#111a13')}
               onMouseLeave={e => view !== tab.id && (e.currentTarget.style.color = '#6b7280')}
             >
+              {getTabIcon(tab.id)}
               {tab.label}
             </button>
           ))}

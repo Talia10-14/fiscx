@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { FiDollarSign, FiCreditCard, FiBarChart2, FiStar, FiTrendingUp, FiPlus, FiUser, FiSettings, FiSearch, FiX, FiCheck, FiClock } from 'react-icons/fi';
 import { useAuthStore } from '../stores/authStore';
 import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
@@ -292,12 +293,24 @@ export default function MerchantDashboard() {
 
   // Render different views based on query param
   const tabs = [
-    { id: 'dashboard', label: '📊 Tableau de bord', icon: '📊' },
-    { id: 'sales', label: '📈 Mes ventes', icon: '📈' },
-    { id: 'transactions', label: '💳 Transactions', icon: '💳' },
-    { id: 'credit', label: '⭐ Score de crédit', icon: '⭐' },
-    { id: 'settings', label: '⚙️ Paramètres', icon: '⚙️' },
+    { id: 'dashboard', label: 'Tableau de bord' },
+    { id: 'sales', label: 'Mes ventes' },
+    { id: 'transactions', label: 'Transactions' },
+    { id: 'credit', label: 'Score de crédit' },
+    { id: 'settings', label: 'Paramètres' },
   ];
+
+  const getTabIcon = (tabId) => {
+    const iconProps = { size: 18, style: { marginRight: 8 } };
+    switch (tabId) {
+      case 'dashboard': return <FiBarChart2 {...iconProps} />;
+      case 'sales': return <FiTrendingUp {...iconProps} />;
+      case 'transactions': return <FiCreditCard {...iconProps} />;
+      case 'credit': return <FiStar {...iconProps} />;
+      case 'settings': return <FiSettings {...iconProps} />;
+      default: return null;
+    }
+  };
 
   const renderView = () => {
     switch (view) {
@@ -305,9 +318,13 @@ export default function MerchantDashboard() {
         return (
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-              <h2 style={{ fontSize: '1.875rem', fontWeight: 700, color: '#111a13', margin: 0 }}>📈 Mes ventes</h2>
-              <button onClick={() => setShowTransactionModal(true)} style={{ padding: '10px 20px', background: '#006b3f', color: 'white', border: 'none', borderRadius: 8, fontSize: '.875rem', fontWeight: 600, cursor: 'pointer' }}>
-                ➕ Ajouter une vente
+              <h2 style={{ fontSize: '1.875rem', fontWeight: 700, color: '#111a13', margin: 0, display: 'flex', alignItems: 'center' }}>
+                <FiTrendingUp size={32} style={{ marginRight: 12 }} />
+                Mes ventes
+              </h2>
+              <button onClick={() => setShowTransactionModal(true)} style={{ padding: '10px 20px', background: '#006b3f', color: 'white', border: 'none', borderRadius: 8, fontSize: '.875rem', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                <FiPlus size={18} style={{ marginRight: 6 }} />
+                Ajouter une vente
               </button>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24, marginBottom: 32 }}>
@@ -334,9 +351,13 @@ export default function MerchantDashboard() {
         return (
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-              <h2 style={{ fontSize: '1.875rem', fontWeight: 700, color: '#111a13', margin: 0 }}>💳 Toutes les transactions</h2>
-              <button onClick={() => setShowTransactionModal(true)} style={{ padding: '10px 20px', background: '#006b3f', color: 'white', border: 'none', borderRadius: 8, fontSize: '.875rem', fontWeight: 600, cursor: 'pointer' }}>
-                ➕ Ajouter une transaction
+              <h2 style={{ fontSize: '1.875rem', fontWeight: 700, color: '#111a13', margin: 0, display: 'flex', alignItems: 'center' }}>
+                <FiCreditCard size={32} style={{ marginRight: 12 }} />
+                Toutes les transactions
+              </h2>
+              <button onClick={() => setShowTransactionModal(true)} style={{ padding: '10px 20px', background: '#006b3f', color: 'white', border: 'none', borderRadius: 8, fontSize: '.875rem', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                <FiPlus size={18} style={{ marginRight: 6 }} />
+                Ajouter une transaction
               </button>
             </div>
             {renderTransactionsTable()}
@@ -345,7 +366,10 @@ export default function MerchantDashboard() {
       case 'credit':
         return (
           <div>
-            <h2 style={{ fontSize: '1.875rem', fontWeight: 700, color: '#111a13', marginBottom: 24 }}>⭐ Mon score de crédit</h2>
+            <h2 style={{ fontSize: '1.875rem', fontWeight: 700, color: '#111a13', marginBottom: 24, display: 'flex', alignItems: 'center' }}>
+              <FiStar size={32} style={{ marginRight: 12 }} />
+              Mon score de crédit
+            </h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
               <div style={{ background: 'white', borderRadius: 12, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,.1)' }}>
                 <p style={{ fontSize: '.875rem', color: '#6b7280', marginBottom: 16 }}>Score actuel</p>
@@ -435,17 +459,17 @@ export default function MerchantDashboard() {
             {/* Actions Section */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24, marginBottom: 32 }}>
               <button onClick={() => setShowTransactionModal(true)} style={{ background: 'white', padding: 24, borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,.1)', textAlign: 'left', cursor: 'pointer', transition: 'all .2s', border: 'none' }} onMouseEnter={e => e.currentTarget.style.boxShadow = '0 10px 15px rgba(0,0,0,.1)'} onMouseLeave={e => e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,.1)'}>
-                <div style={{ fontSize: '1.875rem', marginBottom: 12 }}>➕</div>
+                <div style={{ fontSize: '1.875rem', marginBottom: 12 }}><FiPlus size={32} color="#006b3f" /></div>
                 <h3 style={{ fontWeight: 600, color: '#111a13', marginBottom: 4 }}>Nouvelle transaction</h3>
                 <p style={{ fontSize: '.875rem', color: '#6b7280' }}>Enregistrer une vente ou dépense</p>
               </button>
               <button onClick={() => setShowCreditModal(true)} style={{ background: 'white', padding: 24, borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,.1)', textAlign: 'left', cursor: 'pointer', transition: 'all .2s', border: 'none' }} onMouseEnter={e => e.currentTarget.style.boxShadow = '0 10px 15px rgba(0,0,0,.1)'} onMouseLeave={e => e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,.1)'}>
-                <div style={{ fontSize: '1.875rem', marginBottom: 12 }}>💰</div>
+                <div style={{ fontSize: '1.875rem', marginBottom: 12 }}><FiDollarSign size={32} color="#f59e0b" /></div>
                 <h3 style={{ fontWeight: 600, color: '#111a13', marginBottom: 4 }}>Demander un crédit</h3>
                 <p style={{ fontSize: '.875rem', color: '#6b7280' }}>Accéder à des crédits adaptés</p>
               </button>
               <button style={{ background: 'white', padding: 24, borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,.1)', textAlign: 'left', cursor: 'pointer', transition: 'all .2s', border: 'none' }} onMouseEnter={e => e.currentTarget.style.boxShadow = '0 10px 15px rgba(0,0,0,.1)'} onMouseLeave={e => e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,.1)'}>
-                <div style={{ fontSize: '1.875rem', marginBottom: 12 }}>📋</div>
+                <div style={{ fontSize: '1.875rem', marginBottom: 12 }}><FiBarChart2 size={32} color="#8b5cf6" /></div>
                 <h3 style={{ fontWeight: 600, color: '#111a13', marginBottom: 4 }}>Mes documents</h3>
                 <p style={{ fontSize: '.875rem', color: '#6b7280' }}>Consulter vos documents certifiés</p>
               </button>
@@ -504,10 +528,13 @@ export default function MerchantDashboard() {
                 cursor: 'pointer',
                 whiteSpace: 'nowrap',
                 transition: 'all .2s',
+                display: 'flex',
+                alignItems: 'center',
               }}
               onMouseEnter={e => view !== tab.id && (e.currentTarget.style.color = '#111a13')}
               onMouseLeave={e => view !== tab.id && (e.currentTarget.style.color = '#6b7280')}
             >
+              {getTabIcon(tab.id)}
               {tab.label}
             </button>
           ))}
@@ -524,7 +551,10 @@ export default function MerchantDashboard() {
       {showTransactionModal && (
         <div style={modalOverlayStyle} onClick={() => setShowTransactionModal(false)}>
           <div style={modalStyle} onClick={e => e.stopPropagation()}>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#111a13', marginBottom: 24 }}>➕ Nouvelle transaction</h2>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#111a13', marginBottom: 24, display: 'flex', alignItems: 'center' }}>
+              <FiPlus size={28} style={{ marginRight: 10 }} />
+              Nouvelle transaction
+            </h2>
             <form onSubmit={handleAddTransaction} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div>
                 <label style={{ fontSize: '.875rem', fontWeight: 600, color: '#111a13', display: 'block', marginBottom: 8 }}>Type de transaction</label>
@@ -578,7 +608,10 @@ export default function MerchantDashboard() {
       {showProfileModal && (
         <div style={modalOverlayStyle} onClick={() => setShowProfileModal(false)}>
           <div style={modalStyle} onClick={e => e.stopPropagation()}>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#111a13', marginBottom: 24 }}>👤 Modifier mon profil</h2>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#111a13', marginBottom: 24, display: 'flex', alignItems: 'center' }}>
+              <FiUser size={28} style={{ marginRight: 10 }} />
+              Modifier mon profil
+            </h2>
             <form onSubmit={handleUpdateProfile} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
@@ -663,7 +696,10 @@ export default function MerchantDashboard() {
       {showCreditModal && (
         <div style={modalOverlayStyle} onClick={() => setShowCreditModal(false)}>
           <div style={modalStyle} onClick={e => e.stopPropagation()}>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#111a13', marginBottom: 24 }}>💰 Demander un crédit</h2>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#111a13', marginBottom: 24, display: 'flex', alignItems: 'center' }}>
+              <FiDollarSign size={28} style={{ marginRight: 10 }} />
+              Demander un crédit
+            </h2>
             <form onSubmit={handleCreditRequest} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div>
                 <label style={{ fontSize: '.875rem', fontWeight: 600, color: '#111a13', display: 'block', marginBottom: 8 }}>Montant demandé (FCFA)</label>

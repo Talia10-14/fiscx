@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { FiCheck, FiX, FiTrendingUp, FiUsers, FiFileText, FiBarChart3 } from 'react-icons/fi';
 import { useAuthStore } from '../stores/authStore';
 import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
@@ -121,11 +122,23 @@ export default function BankerDashboard() {
   };
 
   const tabs = [
-    { id: 'dashboard', label: '📊 Tableau de bord', icon: '📊' },
-    { id: 'requests', label: '⏳ Demandes en attente', icon: '⏳' },
-    { id: 'portfolio', label: '💼 Mon portefeuille', icon: '💼' },
-    { id: 'merchants', label: '👥 Commerçants', icon: '👥' },
+    { id: 'dashboard', label: 'Tableau de bord' },
+    { id: 'requests', label: 'Demandes en attente' },
+    { id: 'portfolio', label: 'Mon portefeuille' },
+    { id: 'merchants', label: 'Commerçants' },
   ];
+
+  const getTabIcon = (tabId) => {
+    const iconProps = { size: 18, style: { marginRight: 8 } };
+    const FiClock = () => <FiCheck {...iconProps} />; // For requests/pending
+    switch (tabId) {
+      case 'dashboard': return <FiBarChart3 {...iconProps} />;
+      case 'requests': return <FiCheck {...iconProps} />;
+      case 'portfolio': return <FiTrendingUp {...iconProps} />;
+      case 'merchants': return <FiUsers {...iconProps} />;
+      default: return null;
+    }
+  };
 
   const renderView = () => {
     switch (view) {
@@ -396,10 +409,13 @@ export default function BankerDashboard() {
                 cursor: 'pointer',
                 whiteSpace: 'nowrap',
                 transition: 'all .2s',
+                display: 'flex',
+                alignItems: 'center',
               }}
               onMouseEnter={e => view !== tab.id && (e.currentTarget.style.color = '#111a13')}
               onMouseLeave={e => view !== tab.id && (e.currentTarget.style.color = '#6b7280')}
             >
+              {getTabIcon(tab.id)}
               {tab.label}
             </button>
           ))}
@@ -416,7 +432,10 @@ export default function BankerDashboard() {
       {selectedLoan && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }} onClick={() => setSelectedLoan(null)}>
           <div style={{ background: 'white', borderRadius: 16, padding: 32, maxWidth: 600, width: '90%', boxShadow: '0 20px 25px rgba(0,0,0,.15)' }} onClick={e => e.stopPropagation()}>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#111a13', marginBottom: 8 }}>📋 Examiner demande de crédit</h2>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#111a13', marginBottom: 8, display: 'flex', alignItems: 'center' }}>
+              <FiFileText size={28} style={{ marginRight: 10 }} />
+              Examiner demande de crédit
+            </h2>
             <p style={{ fontSize: '.875rem', color: '#6b7280', marginBottom: 24 }}>{selectedLoan.merchantName} - {selectedLoan.businessType}</p>
             
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24, padding: '16px', background: '#f9fafb', borderRadius: 12 }}>
