@@ -1,0 +1,476 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ── USERS & AUTH ──
+
+model User {
+  id                String   @id @default(cuid())
+  phone             String   @unique // Phone number +229...
+  pin               String   // Hashed PIN (bcrypt)
+  role              UserRole @default(MERCHANT) // MERCHANT, BANKER, ADMIN, DGI, COMPTABLE, KYC_PARTNER
+  firstName         String?
+  lastName          String?
+  businessName      String?
+  email             String?  @unique
+  
+  // Device tracking
+  deviceUUID        String?
+  deviceFP          String?
+  lastLoginAt       DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  // Relations
+  merchant          Merchant?
+  banker            Banker?
+  admin             Admin?
+  comptable         Comptable?
+  transactions      Transaction[]
+  loans             Loan[]
+  auditLogs         AuditLog[]
+  credentials       Credential[]
+
+  @@index([phone])
+  @@index([role])
+}
+
+enum UserRole {
+  MERCHANT      // 🛒 Commerçant
+  COMPTABLE     // 👨‍💼 Comptable/Expert-comptable
+  BANKER        // 🏦 Agent bancaire
+  DGI           // 🏛️ Régulateur (DGI Bénin)
+  ADMIN         // ⚙️ Administrateur FiscX
+  KYC_PARTNER   // 🤝 Partenaire KYC
+}
+
+// ── MERCHANT PROFILE ──
+
+model Merchant {
+  id                String   @id @default(cuid())
+  userID            String   @unique
+  user              User     @relation(fields: [userID], references: [id], onDelete: Cascade)
+  
+  // Business info
+  businessType      String   // "textiles", "épicerie", "couture", etc.
+  businessLocation  String?  // "Marché Dantokpa, Cotonou"
+  businessPhone     String?
+  
+  // Financial data
+  monthlyCAAvg      Float?   // Chiffre d'affaires moyen
+  annualCAEstimate  Float?
+  taxRegime         TaxRegime @default(TS) // TS, RRS, NORMAL
+  
+  // Score & Stats
+  creditScore       Int      @default(300) // 0-1000
+  scoreLastUpdated  DateTime?
+  registrationDate  DateTime @default(now())
+  
+  // Compliance
+  isVerified        Boolean  @default(false)
+  verificationDate  DateTime?
+  
+  // Relations
+  transactions      Transaction[]
+  loans             Loan[]
+  certs             Certificate[]
+  
+  @@index([userID])
+  @@index([creditScore])
+}
+
+enum TaxRegime {
+  TS      // Taxe Synthétique < 50M FCFA
+  RRS     // Régime Réel Simplifié 50M-200M
+  NORMAL  // Comptabilité complète >= 200M
+}
+
+// ── COMPTABLE PROFILE ──
+
+model Comptable {
+  id                String   @id @default(cuid())
+  userID            String   @unique
+  user              User     @relation(fields: [userID], references: [id], onDelete: Cascade)
+  
+  companyName       String?
+  licenseNumber     String?
+  clientsManaged    Int      @default(0)
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  // Can manage multiple merchants
+  managedMerchants  ComptableClient[]
+  
+  @@index([userID])
+}
+
+model ComptableClient {
+  id                String   @id @default(cuid())
+  comptableID       String
+  comptable         Comptable @relation(fields: [comptableID], references: [id], onDelete: Cascade)
+  
+  merchantID        String
+  merchant          Merchant @relation(fields: [merchantID], references: [id], onDelete: Cascade)
+  
+  addedAt           DateTime @default(now())
+  
+  @@unique([comptableID, merchantID])
+  @@index([comptableID])
+  @@index([merchantID])
+}
+
+// ── BANKER PROFILE ──
+
+model Banker {
+  id                String   @id @default(cuid())
+  userID            String   @unique
+  user              User     @relation(fields: [userID], references: [id], onDelete: Cascade)
+  
+  bankName          String
+  bankCode          String?
+  branchCode        String?
+  position          String?  // "Loan Officer", "Credit Manager"
+  
+  createdAt         DateTime @default(now())
+  
+  @@index([userID])
+  @@index([bankName])
+}
+
+// ── ADMIN PROFILE ──
+
+model Admin {
+  id                String   @id @default(cuid())
+  userID            String   @unique
+  user              User     @relation(fields: [userID], references: [id], onDelete: Cascade)
+  
+  permissions       String[] @default(["all"])
+  createdAt         DateTime @default(now())
+  
+  @@index([userID])
+}
+
+// ── CREDENTIALS & KYC ──
+
+model Credential {
+  id                String   @id @default(cuid())
+  userID            String
+  user              User     @relation(fields: [userID], references: [id], onDelete: Cascade)
+  
+  type              CredType // NATIONAL_ID, PASSPORT, etc.
+  identifier        String   @unique
+  issuedAt          DateTime?
+  expiresAt         DateTime?
+  
+  verifiedAt        DateTime?
+  verificationProvider String? // "Smile Identity", etc.
+  
+  @@index([userID])
+  @@index([identifier])
+}
+
+enum CredType {
+  NATIONAL_ID
+  PASSPORT
+  DRIVER_LICENSE
+  OTHER
+}
+
+// ── TRANSACTIONS (Movements) ──
+
+model Transaction {
+  id                String   @id @default(cuid())
+  merchantID        String
+  merchant          Merchant @relation(fields: [merchantID], references: [id], onDelete: Restrict)
+  
+  userID            String   // Who created it
+  user              User     @relation(fields: [userID], references: [id], onDelete: Restrict)
+  
+  type              TransactionType // VENTE, DÉPENSE, RETRAIT, etc.
+  amount            Float    // Always positive, sign in type
+  currency          String   @default("XOF") // FCFA
+  
+  category          String?  // "Marché", "Boutique", "Atelier", etc.
+  description       String?
+  
+  receiptPhoto      String?  // WebP base64 or path
+  
+  status            TransactionStatus @default(CONFIRMED)
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  // Certification
+  certID            String?
+  
+  // No deletions allowed - mark as CANCELLED instead
+  
+  @@index([merchantID])
+  @@index([userID])
+  @@index([createdAt])
+  @@index([type])
+}
+
+enum TransactionType {
+  VENTE       // Sale
+  DÉPENSE     // Expense
+  RETRAIT     // Withdrawal
+  DÉPÔT       // Deposit
+  REMBOURSEMENT // Repayment
+}
+
+enum TransactionStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  DISPUTED
+}
+
+// ── STOCK MANAGEMENT ──
+
+model Product {
+  id                String   @id @default(cuid())
+  merchantID        String
+  
+  name              String
+  sku               String?
+  quantity          Int      @default(0)
+  unitPrice         Float    // FCFA
+  
+  minAlertLevel     Int      @default(5)
+  alertSent         Boolean  @default(false)
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  @@unique([merchantID, sku])
+  @@index([merchantID])
+}
+
+// ── LOANS & CREDIT ──
+
+model Loan {
+  id                String   @id @default(cuid())
+  merchantID        String
+  merchant          Merchant @relation(fields: [merchantID], references: [id], onDelete: Restrict)
+  
+  requesterID       String   // User who applied
+  requester         User     @relation(fields: [requesterID], references: [id], onDelete: Restrict)
+  
+  bankName          String?
+  loanAmount        Float
+  currency          String   @default("XOF")
+  
+  purpose           String?
+  status            LoanStatus @default(DRAFT)
+  
+  scoreAtRequest    Int?     // Credit score snapshot
+  certifyingDocs    String[] // Certificate IDs attached
+  
+  appliedAt         DateTime?
+  approvedAt        DateTime?
+  rejectedAt        DateTime?
+  rejectionReason   String?
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  @@index([merchantID])
+  @@index([status])
+}
+
+enum LoanStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  ACCEPTED
+  DISBURSED
+  CLOSED
+}
+
+// ── CERTIFICATES & QR ──
+
+model Certificate {
+  id                String   @id @default(cuid())
+  merchantID        String
+  merchant          Merchant @relation(fields: [merchantID], references: [id], onDelete: Restrict)
+  
+  type              CertType // JOURNAL, COMPTE_DE_RÉSULTAT, BILAN, DÉCLARATION_TS
+  period            String   // "2026-01", "2026-Q1", "2026"
+  
+  // Content
+  pdfPath           String?
+  pdfHash           String?  // SHA-256 for verification
+  qrCode            String?  // HMAC SHA-256 token
+  verifyURL         String?  // https://fiscx.bj/verify/{token}
+  
+  // Signature
+  signedAt          DateTime?
+  signatureData     String?
+  
+  status            CertStatus @default(DRAFT)
+  
+  createdAt         DateTime @default(now())
+  verified          DateTime? // When QR was scanned/verified
+  
+  @@index([merchantID])
+  @@index([type])
+}
+
+enum CertType {
+  JOURNAL              // Journal de caisse
+  COMPTE_DE_RÉSULTAT   // Income statement
+  BILAN                // Balance sheet
+  DÉCLARATION_TS       // Tax declaration
+  BORDEREAU_VERSEMENT  // Payment note
+}
+
+enum CertStatus {
+  DRAFT
+  PENDING
+  SIGNED
+  REJECTED
+}
+
+// ── FISCAL DATA ──
+
+model FiscalData {
+  id                String   @id @default(cuid())
+  merchantID        String   @unique
+  
+  // Annual summary
+  year              Int
+  totalCA           Float
+  totalCharges      Float
+  netResult         Float
+  
+  taxRegime         TaxRegime
+  taxAmount         Float
+  
+  // Rates used
+  tsRate            Float?   // Taxe Synthétique rate for year
+  tvaRate           Float    @default(0.18) // 18% by default
+  isRate            Float?   // Corporate income tax
+  
+  declarationSent   Boolean  @default(false)
+  sentAt            DateTime?
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  @@index([merchantID])
+  @@index([year])
+}
+
+// ── SCORING ──
+
+model CreditScore {
+  id                String   @id @default(cuid())
+  merchantID        String
+  
+  score             Int      // 0-1000
+  breakdown         CreditScoreBreakdown[]
+  
+  calculatedAt      DateTime @default(now())
+  
+  @@index([merchantID])
+  @@index([calculatedAt])
+}
+
+model CreditScoreBreakdown {
+  id                String   @id @default(cuid())
+  scoringID         String
+  scoring           CreditScore @relation(fields: [scoringID], references: [id], onDelete: Cascade)
+  
+  criterion         String   // "CA_MOYEN", "REGULARITÉ", "ANCIENNETÉ", etc.
+  weight            Int      // Percentage weight
+  points            Int      // Points earned
+  maxPoints         Int      // Max possible
+  
+  @@index([scoringID])
+}
+
+// ── AUDIT LOG ──
+
+model AuditLog {
+  id                String   @id @default(cuid())
+  userID            String
+  user              User     @relation(fields: [userID], references: [id], onDelete: Restrict)
+  
+  action            String   // "LOGIN", "CREATE_TX", "VERIFY_QR", etc.
+  resource          String?  // What was acted upon
+  resourceID        String?
+  
+  status            String   @default("SUCCESS") // SUCCESS, FAILED
+  details           String?  // JSON serialized
+  
+  ipAddress         String?
+  userAgent         String?
+  
+  createdAt         DateTime @default(now())
+  
+  @@index([userID])
+  @@index([action])
+  @@index([createdAt])
+}
+
+// ── QR VERIFICATION ──
+
+model QRVerification {
+  id                String   @id @default(cuid())
+  certID            String
+  
+  verifiedBy        String?  // Who scanned (banker, DGI, etc.)
+  verificationIP    String?
+  
+  status            String   @default("VALID") // VALID, INVALID, EXPIRED
+  details           String?
+  
+  verifiedAt        DateTime @default(now())
+  
+  @@index([certID])
+  @@index([verifiedAt])
+}
+
+// ── NOTIFICATIONS ──
+
+model Notification {
+  id                String   @id @default(cuid())
+  userID            String
+  
+  title             String
+  message           String
+  type              String   // "ALERT", "INFO", "WARNING"
+  
+  read              Boolean  @default(false)
+  readAt            DateTime?
+  
+  createdAt         DateTime @default(now())
+  
+  @@index([userID])
+  @@index([read])
+}
+
+// ── CONFIGURATION (Admin) ──
+
+model Config {
+  id                String   @id @default(cuid())
+  key               String   @unique
+  value             String
+  description       String?
+  
+  updatedAt         DateTime @updatedAt
+  
+  @@index([key])
+}
