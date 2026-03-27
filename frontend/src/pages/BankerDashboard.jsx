@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { FiCheck, FiX, FiTrendingUp, FiUsers, FiFileText, FiBarChart3 } from 'react-icons/fi';
+import { FiCheck, FiX, FiTrendingUp, FiUsers, FiFileText, FiBarChart2 } from 'react-icons/fi';
 import { useAuthStore } from '../stores/authStore';
 import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
@@ -130,9 +130,8 @@ export default function BankerDashboard() {
 
   const getTabIcon = (tabId) => {
     const iconProps = { size: 18, style: { marginRight: 8 } };
-    const FiClock = () => <FiCheck {...iconProps} />; // For requests/pending
     switch (tabId) {
-      case 'dashboard': return <FiBarChart3 {...iconProps} />;
+      case 'dashboard': return <FiBarChart2 {...iconProps} />;
       case 'requests': return <FiCheck {...iconProps} />;
       case 'portfolio': return <FiTrendingUp {...iconProps} />;
       case 'merchants': return <FiUsers {...iconProps} />;
