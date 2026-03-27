@@ -21,10 +21,28 @@ export default function AdminDashboard() {
     dbConnections: 124,
   });
   const [loading, setLoading] = useState(true);
+  const [showTaxModal, setShowTaxModal] = useState(false);
+  const [taxData, setTaxData] = useState({
+    synthetiqueTax: 7.5,
+    patronalTax: 3.6,
+    vat: 18,
+  });
 
   useEffect(() => {
     fetchAdminData();
   }, []);
+
+  const handleUpdateTaxes = async (e) => {
+    e.preventDefault();
+    try {
+      // TODO: Replace with API call
+      // await api.post('/admin/tax-rates', taxData);
+      alert('Taux d\'impôt mis à jour avec succès !');
+      setShowTaxModal(false);
+    } catch (error) {
+      console.error('Error updating tax rates:', error);
+    }
+  };
 
   const fetchAdminData = async () => {
     try {
@@ -128,7 +146,7 @@ export default function AdminDashboard() {
                     <span style={{ color: '#6b7280' }}>TVA</span>
                     <span style={{ fontWeight: 600, color: '#111a13' }}>18%</span>
                   </div>
-                  <button style={{ marginTop: 12, padding: '8px 16px', background: '#006b3f', color: 'white', border: 'none', borderRadius: 6, fontSize: '.85rem', fontWeight: 600, cursor: 'pointer' }}>Mettre à jour les taux</button>
+                  <button onClick={() => setShowTaxModal(true)} style={{ marginTop: 12, padding: '8px 16px', background: '#006b3f', color: 'white', border: 'none', borderRadius: 6, fontSize: '.85rem', fontWeight: 600, cursor: 'pointer' }}>Mettre à jour les taux</button>
                 </div>
               </div>
               <div style={{ background: 'white', borderRadius: 12, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,.1)' }}>
@@ -282,6 +300,74 @@ export default function AdminDashboard() {
           </div>
         </main>
       </div>
+
+      {/* Modal: Update Tax Rates */}
+      {showTaxModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }} onClick={() => setShowTaxModal(false)}>
+          <div style={{ background: 'white', borderRadius: 16, padding: 32, maxWidth: 500, width: '90%', boxShadow: '0 20px 25px rgba(0,0,0,.15)' }} onClick={e => e.stopPropagation()}>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#111a13', marginBottom: 24 }}>⚙️ Mettre à jour les taux d'impôt</h2>
+            
+            <form onSubmit={handleUpdateTaxes} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+              <div>
+                <label style={{ fontSize: '.875rem', fontWeight: 600, color: '#111a13', display: 'block', marginBottom: 8 }}>Impôt synthétique (%)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  max="100"
+                  value={taxData.synthetiqueTax}
+                  onChange={e => setTaxData({ ...taxData, synthetiqueTax: parseFloat(e.target.value) })}
+                  style={{ width: '100%', padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: 8, fontSize: '.875rem', fontFamily: 'inherit', boxSizing: 'border-box' }}
+                />
+                <p style={{ fontSize: '.75rem', color: '#6b7280', marginTop: 4 }}>Code Général des Impôts - Bénin</p>
+              </div>
+
+              <div>
+                <label style={{ fontSize: '.875rem', fontWeight: 600, color: '#111a13', display: 'block', marginBottom: 8 }}>Taxe patronale (%)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  max="100"
+                  value={taxData.patronalTax}
+                  onChange={e => setTaxData({ ...taxData, patronalTax: parseFloat(e.target.value) })}
+                  style={{ width: '100%', padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: 8, fontSize: '.875rem', fontFamily: 'inherit', boxSizing: 'border-box' }}
+                />
+                <p style={{ fontSize: '.75rem', color: '#6b7280', marginTop: 4 }}>Cotisation aux organismes sociaux</p>
+              </div>
+
+              <div>
+                <label style={{ fontSize: '.875rem', fontWeight: 600, color: '#111a13', display: 'block', marginBottom: 8 }}>TVA (%)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  max="100"
+                  value={taxData.vat}
+                  onChange={e => setTaxData({ ...taxData, vat: parseFloat(e.target.value) })}
+                  style={{ width: '100%', padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: 8, fontSize: '.875rem', fontFamily: 'inherit', boxSizing: 'border-box' }}
+                />
+                <p style={{ fontSize: '.75rem', color: '#6b7280', marginTop: 4 }}>Taxe sur la valeur ajoutée</p>
+              </div>
+
+              <div style={{ padding: 16, background: '#f0fdf4', borderRadius: 12, border: '1px solid #86efac' }}>
+                <p style={{ fontSize: '.875rem', color: '#047857', margin: 0 }}>
+                  💡 Ces taux s'appliqueront à tous les nouveaux calculs fiscaux dans le système
+                </p>
+              </div>
+
+              <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
+                <button type="button" onClick={() => setShowTaxModal(false)} style={{ flex: 1, padding: '12px 16px', background: '#e5e7eb', color: '#374151', border: 'none', borderRadius: 8, fontSize: '.875rem', fontWeight: 600, cursor: 'pointer' }}>
+                  Annuler
+                </button>
+                <button type="submit" style={{ flex: 1, padding: '12px 16px', background: '#006b3f', color: 'white', border: 'none', borderRadius: 8, fontSize: '.875rem', fontWeight: 600, cursor: 'pointer' }}>
+                  Mettre à jour
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

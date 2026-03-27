@@ -20,10 +20,30 @@ export default function BankerDashboard() {
   });
   const [loanRequests, setLoanRequests] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedLoan, setSelectedLoan] = useState(null);
+  const [loanDecision, setLoanDecision] = useState({
+    status: 'APPROVED',
+    approvedAmount: '',
+    interestRate: 8,
+    comment: '',
+  });
 
   useEffect(() => {
     fetchBankerData();
   }, []);
+
+  const handleLoanDecision = async (e) => {
+    e.preventDefault();
+    try {
+      // TODO: Replace with API call
+      // await api.post(`/banker/loans/${selectedLoan.id}/decision`, loanDecision);
+      alert(`Décision enregistrée: ${loanDecision.status === 'APPROVED' ? 'Approuvé' : 'Rejeté'}`);
+      setSelectedLoan(null);
+      setLoanDecision({ status: 'APPROVED', approvedAmount: '', interestRate: 8, comment: '' });
+    } catch (error) {
+      console.error('Error making loan decision:', error);
+    }
+  };
 
   const fetchBankerData = async () => {
     try {
@@ -140,8 +160,8 @@ export default function BankerDashboard() {
                           </td>
                           <td style={{ padding: '16px 24px', fontSize: '.875rem', color: '#6b7280' }}>{formatDate(request.submittedAt)}</td>
                           <td style={{ padding: '16px 24px', textAlign: 'center' }}>
-                            <button style={{ padding: '6px 12px', background: '#006b3f', color: 'white', border: 'none', borderRadius: 6, fontSize: '.85rem', fontWeight: 500, cursor: 'pointer', transition: 'all .2s', marginRight: 8 }} onMouseEnter={e => e.currentTarget.style.background = '#005232'} onMouseLeave={e => e.currentTarget.style.background = '#006b3f'}>Examiner</button>
-                            <button style={{ padding: '6px 12px', background: '#e5e7eb', color: '#374151', border: 'none', borderRadius: 6, fontSize: '.85rem', fontWeight: 500, cursor: 'pointer', transition: 'all .2s' }} onMouseEnter={e => e.currentTarget.style.background = '#d1d5db'} onMouseLeave={e => e.currentTarget.style.background = '#e5e7eb'}>Rejeter</button>
+                            <button onClick={() => setSelectedLoan(request)} style={{ padding: '6px 12px', background: '#006b3f', color: 'white', border: 'none', borderRadius: 6, fontSize: '.85rem', fontWeight: 500, cursor: 'pointer', transition: 'all .2s', marginRight: 8 }} onMouseEnter={e => e.currentTarget.style.background = '#005232'} onMouseLeave={e => e.currentTarget.style.background = '#006b3f'}>Examiner</button>
+                            <button onClick={() => setSelectedLoan(request)} style={{ padding: '6px 12px', background: '#e5e7eb', color: '#374151', border: 'none', borderRadius: 6, fontSize: '.85rem', fontWeight: 500, cursor: 'pointer', transition: 'all .2s' }} onMouseEnter={e => e.currentTarget.style.background = '#d1d5db'} onMouseLeave={e => e.currentTarget.style.background = '#e5e7eb'}>Rejeter</button>
                           </td>
                         </tr>
                       ))}
@@ -376,6 +396,126 @@ export default function BankerDashboard() {
           </div>
         </main>
       </div>
+
+      {/* Modal: Loan Decision */}
+      {selectedLoan && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }} onClick={() => setSelectedLoan(null)}>
+          <div style={{ background: 'white', borderRadius: 16, padding: 32, maxWidth: 600, width: '90%', boxShadow: '0 20px 25px rgba(0,0,0,.15)' }} onClick={e => e.stopPropagation()}>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#111a13', marginBottom: 8 }}>📋 Examiner demande de crédit</h2>
+            <p style={{ fontSize: '.875rem', color: '#6b7280', marginBottom: 24 }}>{selectedLoan.merchantName} - {selectedLoan.businessType}</p>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24, padding: '16px', background: '#f9fafb', borderRadius: 12 }}>
+              <div>
+                <p style={{ fontSize: '.75rem', color: '#6b7280', marginBottom: 4 }}>Montant demandé</p>
+                <p style={{ fontSize: '1.25rem', fontWeight: 700, color: '#111a13' }}>{formatCurrency(selectedLoan.requestedAmount)}</p>
+              </div>
+              <div>
+                <p style={{ fontSize: '.75rem', color: '#6b7280', marginBottom: 4 }}>Score crédit</p>
+                <p style={{ fontSize: '1.25rem', fontWeight: 700, color: '#006b3f' }}>{selectedLoan.creditScore}/1000</p>
+              </div>
+              <div>
+                <p style={{ fontSize: '.75rem', color: '#6b7280', marginBottom: 4 }}>CA mensuel</p>
+                <p style={{ fontSize: '1.25rem', fontWeight: 700, color: '#111a13' }}>{formatCurrency(selectedLoan.monthlyRevenue)}</p>
+              </div>
+              <div>
+                <p style={{ fontSize: '.75rem', color: '#6b7280', marginBottom: 4 }}>Demandé le</p>
+                <p style={{ fontSize: '1.25rem', fontWeight: 700, color: '#111a13' }}>{formatDate(selectedLoan.submittedAt).split(' ')[0]}</p>
+              </div>
+            </div>
+
+            <form onSubmit={handleLoanDecision} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div>
+                <label style={{ fontSize: '.875rem', fontWeight: 600, color: '#111a13', display: 'block', marginBottom: 8 }}>Décision</label>
+                <div style={{ display: 'flex', gap: 12 }}>
+                  <button
+                    type="button"
+                    onClick={() => setLoanDecision({ ...loanDecision, status: 'APPROVED' })}
+                    style={{
+                      flex: 1,
+                      padding: '12px 16px',
+                      background: loanDecision.status === 'APPROVED' ? '#dcfce7' : '#f9fafb',
+                      color: loanDecision.status === 'APPROVED' ? '#166534' : '#6b7280',
+                      border: `2px solid ${loanDecision.status === 'APPROVED' ? '#6ee7b7' : '#e5e7eb'}`,
+                      borderRadius: 8,
+                      fontSize: '.875rem',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    ✓ Approuver
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setLoanDecision({ ...loanDecision, status: 'REJECTED' })}
+                    style={{
+                      flex: 1,
+                      padding: '12px 16px',
+                      background: loanDecision.status === 'REJECTED' ? '#fee2e2' : '#f9fafb',
+                      color: loanDecision.status === 'REJECTED' ? '#991b1b' : '#6b7280',
+                      border: `2px solid ${loanDecision.status === 'REJECTED' ? '#fca5a5' : '#e5e7eb'}`,
+                      borderRadius: 8,
+                      fontSize: '.875rem',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    ✗ Rejeter
+                  </button>
+                </div>
+              </div>
+
+              {loanDecision.status === 'APPROVED' && (
+                <>
+                  <div>
+                    <label style={{ fontSize: '.875rem', fontWeight: 600, color: '#111a13', display: 'block', marginBottom: 8 }}>Montant à approuver (FCFA)</label>
+                    <input
+                      type="number"
+                      step="1000"
+                      value={loanDecision.approvedAmount}
+                      onChange={e => setLoanDecision({ ...loanDecision, approvedAmount: e.target.value })}
+                      placeholder={selectedLoan.requestedAmount}
+                      required
+                      style={{ width: '100%', padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: 8, fontSize: '.875rem', fontFamily: 'inherit', boxSizing: 'border-box' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '.875rem', fontWeight: 600, color: '#111a13', display: 'block', marginBottom: 8 }}>Taux d'intérêt annuel (%)</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      max="25"
+                      value={loanDecision.interestRate}
+                      onChange={e => setLoanDecision({ ...loanDecision, interestRate: parseFloat(e.target.value) })}
+                      style={{ width: '100%', padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: 8, fontSize: '.875rem', fontFamily: 'inherit', boxSizing: 'border-box' }}
+                    />
+                  </div>
+                </>
+              )}
+
+              <div>
+                <label style={{ fontSize: '.875rem', fontWeight: 600, color: '#111a13', display: 'block', marginBottom: 8 }}>Commentaires</label>
+                <textarea
+                  value={loanDecision.comment}
+                  onChange={e => setLoanDecision({ ...loanDecision, comment: e.target.value })}
+                  placeholder="Justification de votre décision..."
+                  rows="4"
+                  style={{ width: '100%', padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: 8, fontSize: '.875rem', fontFamily: 'inherit', boxSizing: 'border-box', resize: 'vertical' }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
+                <button type="button" onClick={() => setSelectedLoan(null)} style={{ flex: 1, padding: '12px 16px', background: '#e5e7eb', color: '#374151', border: 'none', borderRadius: 8, fontSize: '.875rem', fontWeight: 600, cursor: 'pointer' }}>
+                  Annuler
+                </button>
+                <button type="submit" style={{ flex: 1, padding: '12px 16px', background: '#006b3f', color: 'white', border: 'none', borderRadius: 8, fontSize: '.875rem', fontWeight: 600, cursor: 'pointer' }}>
+                  Enregistrer décision
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

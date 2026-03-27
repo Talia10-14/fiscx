@@ -22,10 +22,47 @@ export default function DGIDashboard() {
     bilansNonCompliant: 14,
   });
   const [loading, setLoading] = useState(true);
+  const [selectedBilan, setSelectedBilan] = useState(null);
+  const [selectedDeclaration, setSelectedDeclaration] = useState(null);
+  const [bilanDecision, setBilanDecision] = useState({
+    status: 'VERIFIED',
+    comment: '',
+  });
+  const [declarationDecision, setDeclarationDecision] = useState({
+    status: 'APPROVED',
+    taxAssessment: '',
+    comment: '',
+  });
 
   useEffect(() => {
     fetchDGIData();
   }, []);
+
+  const handleBilanDecision = async (e) => {
+    e.preventDefault();
+    try {
+      // TODO: Replace with API call
+      // await api.post(`/dgi/bilans/${selectedBilan.id}/verify`, bilanDecision);
+      alert(`Bilan ${bilanDecision.status === 'VERIFIED' ? 'certifié' : 'marqué non-conforme'}`);
+      setSelectedBilan(null);
+      setBilanDecision({ status: 'VERIFIED', comment: '' });
+    } catch (error) {
+      console.error('Error verifying bilan:', error);
+    }
+  };
+
+  const handleDeclarationDecision = async (e) => {
+    e.preventDefault();
+    try {
+      // TODO: Replace with API call
+      // await api.post(`/dgi/declarations/${selectedDeclaration.status}/approve`, declarationDecision);
+      alert(`Déclaration ${declarationDecision.status === 'APPROVED' ? 'approuvée' : 'rejetée'}`);
+      setSelectedDeclaration(null);
+      setDeclarationDecision({ status: 'APPROVED', taxAssessment: '', comment: '' });
+    } catch (error) {
+      console.error('Error making declaration decision:', error);
+    }
+  };
 
   const fetchDGIData = async () => {
     try {
@@ -90,7 +127,7 @@ export default function DGIDashboard() {
                       <p style={{ fontSize: '.875rem', fontWeight: 600, color: '#111a13', margin: 0 }}>{record.merchant}</p>
                       <p style={{ fontSize: '.75rem', color: '#6b7280', margin: '4px 0 0 0' }}>Période: {record.period} • Reçu: {record.date}</p>
                     </div>
-                    <button style={{ padding: '6px 12px', background: record.status === 'Certifié' ? '#dcfce7' : '#fef3c7', color: record.status === 'Certifié' ? '#166534' : '#92400e', border: 'none', borderRadius: 6, fontSize: '.75rem', fontWeight: 600, cursor: 'pointer' }}>
+                    <button onClick={() => setSelectedBilan(record)} style={{ padding: '6px 12px', background: record.status === 'Certifié' ? '#dcfce7' : '#fef3c7', color: record.status === 'Certifié' ? '#166534' : '#92400e', border: 'none', borderRadius: 6, fontSize: '.75rem', fontWeight: 600, cursor: 'pointer' }}>
                       {record.status === 'Certifié' ? '✓ Certifié' : 'Certifier'}
                     </button>
                   </div>
@@ -144,7 +181,7 @@ export default function DGIDashboard() {
                         <td style={{ padding: '12px 16px', fontSize: '.875rem', color: '#111a13' }}>{row.count}</td>
                         <td style={{ padding: '12px 16px', fontSize: '.875rem', fontWeight: 600, color: '#006b3f' }}>{formatCurrency(row.amount)}</td>
                         <td style={{ padding: '12px 16px', fontSize: '.875rem' }}>
-                          <button style={{ padding: '4px 12px', background: '#dbeafe', color: '#1e40af', border: 'none', borderRadius: 6, fontSize: '.75rem', fontWeight: 600, cursor: 'pointer' }}>Voir</button>
+                          <button onClick={() => setSelectedDeclaration(row)} style={{ padding: '4px 12px', background: '#dbeafe', color: '#1e40af', border: 'none', borderRadius: 6, fontSize: '.75rem', fontWeight: 600, cursor: 'pointer' }}>Voir</button>
                         </td>
                       </tr>
                     ))}
@@ -310,6 +347,162 @@ export default function DGIDashboard() {
           </div>
         </main>
       </div>
+
+      {/* Modal: Verify Bilan */}
+      {selectedBilan && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }} onClick={() => setSelectedBilan(null)}>
+          <div style={{ background: 'white', borderRadius: 16, padding: 32, maxWidth: 500, width: '90%', boxShadow: '0 20px 25px rgba(0,0,0,.15)' }} onClick={e => e.stopPropagation()}>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#111a13', marginBottom: 8 }}>📝 Certifier bilan SYSCOHADA</h2>
+            <p style={{ fontSize: '.875rem', color: '#6b7280', marginBottom: 24 }}>{selectedBilan.merchant} - Période: {selectedBilan.period}</p>
+            
+            <form onSubmit={handleBilanDecision} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div>
+                <label style={{ fontSize: '.875rem', fontWeight: 600, color: '#111a13', display: 'block', marginBottom: 8 }}>Décision</label>
+                <div style={{ display: 'flex', gap: 12 }}>
+                  <button
+                    type="button"
+                    onClick={() => setBilanDecision({ ...bilanDecision, status: 'VERIFIED' })}
+                    style={{
+                      flex: 1,
+                      padding: '12px 16px',
+                      background: bilanDecision.status === 'VERIFIED' ? '#dcfce7' : '#f9fafb',
+                      color: bilanDecision.status === 'VERIFIED' ? '#166534' : '#6b7280',
+                      border: `2px solid ${bilanDecision.status === 'VERIFIED' ? '#6ee7b7' : '#e5e7eb'}`,
+                      borderRadius: 8,
+                      fontSize: '.875rem',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    ✓ Certifier
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setBilanDecision({ ...bilanDecision, status: 'NON_COMPLIANT' })}
+                    style={{
+                      flex: 1,
+                      padding: '12px 16px',
+                      background: bilanDecision.status === 'NON_COMPLIANT' ? '#fee2e2' : '#f9fafb',
+                      color: bilanDecision.status === 'NON_COMPLIANT' ? '#991b1b' : '#6b7280',
+                      border: `2px solid ${bilanDecision.status === 'NON_COMPLIANT' ? '#fca5a5' : '#e5e7eb'}`,
+                      borderRadius: 8,
+                      fontSize: '.875rem',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    ⚠ Non-conforme
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label style={{ fontSize: '.875rem', fontWeight: 600, color: '#111a13', display: 'block', marginBottom: 8 }}>Commentaires</label>
+                <textarea
+                  value={bilanDecision.comment}
+                  onChange={e => setBilanDecision({ ...bilanDecision, comment: e.target.value })}
+                  placeholder="Observations et raison de la décision..."
+                  rows="4"
+                  style={{ width: '100%', padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: 8, fontSize: '.875rem', fontFamily: 'inherit', boxSizing: 'border-box', resize: 'vertical' }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
+                <button type="button" onClick={() => setSelectedBilan(null)} style={{ flex: 1, padding: '12px 16px', background: '#e5e7eb', color: '#374151', border: 'none', borderRadius: 8, fontSize: '.875rem', fontWeight: 600, cursor: 'pointer' }}>
+                  Annuler
+                </button>
+                <button type="submit" style={{ flex: 1, padding: '12px 16px', background: '#006b3f', color: 'white', border: 'none', borderRadius: 8, fontSize: '.875rem', fontWeight: 600, cursor: 'pointer' }}>
+                  Enregistrer
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Declaration Decision */}
+      {selectedDeclaration && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }} onClick={() => setSelectedDeclaration(null)}>
+          <div style={{ background: 'white', borderRadius: 16, padding: 32, maxWidth: 500, width: '90%', boxShadow: '0 20px 25px rgba(0,0,0,.15)' }} onClick={e => e.stopPropagation()}>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#111a13', marginBottom: 8 }}>📋 Valider déclaration</h2>
+            <p style={{ fontSize: '.875rem', color: '#6b7280', marginBottom: 24 }}>Statut: {selectedDeclaration.status} · Montant: {formatCurrency(selectedDeclaration.amount)}</p>
+            
+            <form onSubmit={handleDeclarationDecision} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div>
+                <label style={{ fontSize: '.875rem', fontWeight: 600, color: '#111a13', display: 'block', marginBottom: 8 }}>Décision</label>
+                <div style={{ display: 'flex', gap: 12 }}>
+                  <button
+                    type="button"
+                    onClick={() => setDeclarationDecision({ ...declarationDecision, status: 'APPROVED' })}
+                    style={{
+                      flex: 1,
+                      padding: '12px 16px',
+                      background: declarationDecision.status === 'APPROVED' ? '#dcfce7' : '#f9fafb',
+                      color: declarationDecision.status === 'APPROVED' ? '#166534' : '#6b7280',
+                      border: `2px solid ${declarationDecision.status === 'APPROVED' ? '#6ee7b7' : '#e5e7eb'}`,
+                      borderRadius: 8,
+                      fontSize: '.875rem',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    ✓ Approuver
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDeclarationDecision({ ...declarationDecision, status: 'REJECTED' })}
+                    style={{
+                      flex: 1,
+                      padding: '12px 16px',
+                      background: declarationDecision.status === 'REJECTED' ? '#fee2e2' : '#f9fafb',
+                      color: declarationDecision.status === 'REJECTED' ? '#991b1b' : '#6b7280',
+                      border: `2px solid ${declarationDecision.status === 'REJECTED' ? '#fca5a5' : '#e5e7eb'}`,
+                      borderRadius: 8,
+                      fontSize: '.875rem',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    ✗ Rejeter
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label style={{ fontSize: '.875rem', fontWeight: 600, color: '#111a13', display: 'block', marginBottom: 8 }}>Évaluation fiscale (FCFA)</label>
+                <input
+                  type="number"
+                  step="1000"
+                  value={declarationDecision.taxAssessment}
+                  onChange={e => setDeclarationDecision({ ...declarationDecision, taxAssessment: e.target.value })}
+                  placeholder="Montant d'impôt due"
+                  style={{ width: '100%', padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: 8, fontSize: '.875rem', fontFamily: 'inherit', boxSizing: 'border-box' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ fontSize: '.875rem', fontWeight: 600, color: '#111a13', display: 'block', marginBottom: 8 }}>Commentaires</label>
+                <textarea
+                  value={declarationDecision.comment}
+                  onChange={e => setDeclarationDecision({ ...declarationDecision, comment: e.target.value })}
+                  placeholder="Raison de votre décision..."
+                  rows="4"
+                  style={{ width: '100%', padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: 8, fontSize: '.875rem', fontFamily: 'inherit', boxSizing: 'border-box', resize: 'vertical' }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
+                <button type="button" onClick={() => setSelectedDeclaration(null)} style={{ flex: 1, padding: '12px 16px', background: '#e5e7eb', color: '#374151', border: 'none', borderRadius: 8, fontSize: '.875rem', fontWeight: 600, cursor: 'pointer' }}>
+                  Annuler
+                </button>
+                <button type="submit" style={{ flex: 1, padding: '12px 16px', background: '#006b3f', color: 'white', border: 'none', borderRadius: 8, fontSize: '.875rem', fontWeight: 600, cursor: 'pointer' }}>
+                  Enregistrer décision
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

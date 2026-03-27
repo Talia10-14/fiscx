@@ -20,10 +20,55 @@ export default function MerchantDashboard() {
   });
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showTransactionModal, setShowTransactionModal] = useState(false);
+  const [showCreditModal, setShowCreditModal] = useState(false);
+  const [formData, setFormData] = useState({
+    type: 'VENTE',
+    amount: '',
+    description: '',
+  });
+  const [creditData, setCreditData] = useState({
+    requestedAmount: '',
+    reason: '',
+    duration: 12,
+  });
 
   useEffect(() => {
     fetchMerchantData();
   }, []);
+
+  const handleAddTransaction = async (e) => {
+    e.preventDefault();
+    try {
+      // TODO: Replace with API call
+      // await api.post('/merchant/transactions', formData);
+      const newTransaction = {
+        id: transactions.length + 1,
+        ...formData,
+        amount: parseFloat(formData.amount) * (formData.type === 'DÉPENSE' ? -1 : 1),
+        date: new Date().toISOString(),
+        status: 'COMPLÉTÉ',
+      };
+      setTransactions([newTransaction, ...transactions]);
+      setFormData({ type: 'VENTE', amount: '', description: '' });
+      setShowTransactionModal(false);
+    } catch (error) {
+      console.error('Error adding transaction:', error);
+    }
+  };
+
+  const handleCreditRequest = async (e) => {
+    e.preventDefault();
+    try {
+      // TODO: Replace with API call
+      // await api.post('/merchant/credit-request', creditData);
+      alert(`Demande de crédit de ${formatCurrency(creditData.requestedAmount)} soumise avec succès !`);
+      setCreditData({ requestedAmount: '', reason: '', duration: 12 });
+      setShowCreditModal(false);
+    } catch (error) {
+      console.error('Error requesting credit:', error);
+    }
+  };
 
   const fetchMerchantData = async () => {
     try {
@@ -219,12 +264,12 @@ export default function MerchantDashboard() {
 
             {/* Actions Section */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24, marginBottom: 32 }}>
-              <button style={{ background: 'white', padding: 24, borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,.1)', textAlign: 'left', cursor: 'pointer', transition: 'all .2s', border: 'none' }} onMouseEnter={e => e.currentTarget.style.boxShadow = '0 10px 15px rgba(0,0,0,.1)'} onMouseLeave={e => e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,.1)'}>
+              <button onClick={() => setShowTransactionModal(true)} style={{ background: 'white', padding: 24, borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,.1)', textAlign: 'left', cursor: 'pointer', transition: 'all .2s', border: 'none' }} onMouseEnter={e => e.currentTarget.style.boxShadow = '0 10px 15px rgba(0,0,0,.1)'} onMouseLeave={e => e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,.1)'}>
                 <div style={{ fontSize: '1.875rem', marginBottom: 12 }}>➕</div>
                 <h3 style={{ fontWeight: 600, color: '#111a13', marginBottom: 4 }}>Nouvelle transaction</h3>
                 <p style={{ fontSize: '.875rem', color: '#6b7280' }}>Enregistrer une vente ou dépense</p>
               </button>
-              <button style={{ background: 'white', padding: 24, borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,.1)', textAlign: 'left', cursor: 'pointer', transition: 'all .2s', border: 'none' }} onMouseEnter={e => e.currentTarget.style.boxShadow = '0 10px 15px rgba(0,0,0,.1)'} onMouseLeave={e => e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,.1)'}>
+              <button onClick={() => setShowCreditModal(true)} style={{ background: 'white', padding: 24, borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,.1)', textAlign: 'left', cursor: 'pointer', transition: 'all .2s', border: 'none' }} onMouseEnter={e => e.currentTarget.style.boxShadow = '0 10px 15px rgba(0,0,0,.1)'} onMouseLeave={e => e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,.1)'}>
                 <div style={{ fontSize: '1.875rem', marginBottom: 12 }}>💰</div>
                 <h3 style={{ fontWeight: 600, color: '#111a13', marginBottom: 4 }}>Demander un crédit</h3>
                 <p style={{ fontSize: '.875rem', color: '#6b7280' }}>Accéder à des crédits adaptés</p>
@@ -244,6 +289,238 @@ export default function MerchantDashboard() {
   };
 
   const renderTransactionsTable = () => (
+    <div style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,.1)', overflow: 'hidden' }}>
+      <div style={{ padding: '24px', borderBottom: '1px solid #e5e7eb' }}>
+        <h2 style={{ fontSize: '1.125rem', fontWeight: 600, color: '#111a13' }}>Transactions récentes</h2>
+      </div>
+      
+      {loading ? (
+        <div style={{ padding: 24, textAlign: 'center', color: '#6b7280' }}>Chargement...</div>
+      ) : transactions.length > 0 ? (
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr style={{ background: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
+                <th style={{ padding: '12px 24px', textAlign: 'left', fontSize: '.875rem', fontWeight: 600, color: '#374151' }}>Type</th>
+                <th style={{ padding: '12px 24px', textAlign: 'left', fontSize: '.875rem', fontWeight: 600, color: '#374151' }}>Description</th>
+                <th style={{ padding: '12px 24px', textAlign: 'left', fontSize: '.875rem', fontWeight: 600, color: '#374151' }}>Montant</th>
+                <th style={{ padding: '12px 24px', textAlign: 'left', fontSize: '.875rem', fontWeight: 600, color: '#374151' }}>Date</th>
+                <th style={{ padding: '12px 24px', textAlign: 'left', fontSize: '.875rem', fontWeight: 600, color: '#374151' }}>Statut</th>
+              </tr>
+            </thead>
+            <tbody>
+              {transactions.map((transaction) => (
+                <tr key={transaction.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
+                  <td style={{ padding: '16px 24px', fontSize: '.875rem' }}>
+                    <span style={{
+                      padding: '4px 12px',
+                      borderRadius: 20,
+                      fontSize: '.75rem',
+                      fontWeight: 600,
+                      background: transaction.type === 'VENTE' ? '#dcfce7' : transaction.type === 'DÉPENSE' ? '#fee2e2' : '#dbeafe',
+                      color: transaction.type === 'VENTE' ? '#166534' : transaction.type === 'DÉPENSE' ? '#991b1b' : '#1e40af',
+                    }}>
+                      {transaction.type}
+                    </span>
+                  </td>
+                  <td style={{ padding: '16px 24px', fontSize: '.875rem', color: '#111a13' }}>{transaction.description}</td>
+                  <td style={{ padding: '16px 24px', fontSize: '.875rem', fontWeight: 600, color: transaction.amount > 0 ? '#059669' : '#dc2626' }}>
+                    {transaction.amount > 0 ? '+' : ''}{formatCurrency(transaction.amount)}
+                  </td>
+                  <td style={{ padding: '16px 24px', fontSize: '.875rem', color: '#6b7280' }}>{formatDate(transaction.date)}</td>
+                  <td style={{ padding: '16px 24px', fontSize: '.875rem' }}>
+                    <span style={{ padding: '4px 12px', borderRadius: 20, fontSize: '.75rem', fontWeight: 600, background: '#dcfce7', color: '#166534' }}>
+                      {transaction.status}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div style={{ padding: 24, textAlign: 'center', color: '#6b7280' }}>Aucune transaction pour le moment</div>
+      )}
+    </div>
+  );
+
+  // Modal Styles
+  const modalOverlayStyle = {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: 'rgba(0,0,0,.5)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1000,
+  };
+
+  const modalStyle = {
+    background: 'white',
+    borderRadius: 16,
+    padding: 32,
+    maxWidth: 500,
+    width: '90%',
+    boxShadow: '0 20px 25px rgba(0,0,0,.15)',
+  };
+
+  return (
+    <div style={{ display: 'flex', height: '100vh', background: '#f9fafb' }}>
+      <Sidebar />
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <Header />
+        
+        {/* Tabs Navigation */}
+        <div style={{ background: 'white', borderBottom: '1px solid #e5e7eb', display: 'flex', overflowX: 'auto' }}>
+          {tabs.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => navigate(`?view=${tab.id}`)}
+              style={{
+                padding: '16px 24px',
+                fontSize: '.875rem',
+                fontWeight: 600,
+                color: view === tab.id ? '#006b3f' : '#6b7280',
+                background: 'transparent',
+                border: 'none',
+                borderBottom: view === tab.id ? '3px solid #006b3f' : '3px solid transparent',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                transition: 'all .2s',
+              }}
+              onMouseEnter={e => view !== tab.id && (e.currentTarget.style.color = '#111a13')}
+              onMouseLeave={e => view !== tab.id && (e.currentTarget.style.color = '#6b7280')}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        <main style={{ flex: 1, overflowY: 'auto' }}>
+          <div style={{ maxWidth: 1280, margin: '0 auto', padding: '32px 16px 32px 32px' }}>
+            {renderView()}
+          </div>
+        </main>
+      </div>
+
+      {/* Modal: Add Transaction */}
+      {showTransactionModal && (
+        <div style={modalOverlayStyle} onClick={() => setShowTransactionModal(false)}>
+          <div style={modalStyle} onClick={e => e.stopPropagation()}>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#111a13', marginBottom: 24 }}>➕ Nouvelle transaction</h2>
+            <form onSubmit={handleAddTransaction} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div>
+                <label style={{ fontSize: '.875rem', fontWeight: 600, color: '#111a13', display: 'block', marginBottom: 8 }}>Type de transaction</label>
+                <select
+                  value={formData.type}
+                  onChange={e => setFormData({ ...formData, type: e.target.value })}
+                  style={{ width: '100%', padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: 8, fontSize: '.875rem', fontFamily: 'inherit' }}
+                >
+                  <option value="VENTE">Vente</option>
+                  <option value="DÉPENSE">Dépense</option>
+                  <option value="RETRAIT">Retrait</option>
+                </select>
+              </div>
+              <div>
+                <label style={{ fontSize: '.875rem', fontWeight: 600, color: '#111a13', display: 'block', marginBottom: 8 }}>Montant (FCFA)</label>
+                <input
+                  type="number"
+                  step="100"
+                  value={formData.amount}
+                  onChange={e => setFormData({ ...formData, amount: e.target.value })}
+                  placeholder="0"
+                  required
+                  style={{ width: '100%', padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: 8, fontSize: '.875rem', fontFamily: 'inherit', boxSizing: 'border-box' }}
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: '.875rem', fontWeight: 600, color: '#111a13', display: 'block', marginBottom: 8 }}>Description</label>
+                <input
+                  type="text"
+                  value={formData.description}
+                  onChange={e => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Ex: Vente de pagnes"
+                  required
+                  style={{ width: '100%', padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: 8, fontSize: '.875rem', fontFamily: 'inherit', boxSizing: 'border-box' }}
+                />
+              </div>
+              <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
+                <button type="button" onClick={() => setShowTransactionModal(false)} style={{ flex: 1, padding: '12px 16px', background: '#e5e7eb', color: '#374151', border: 'none', borderRadius: 8, fontSize: '.875rem', fontWeight: 600, cursor: 'pointer' }}>
+                  Annuler
+                </button>
+                <button type="submit" style={{ flex: 1, padding: '12px 16px', background: '#006b3f', color: 'white', border: 'none', borderRadius: 8, fontSize: '.875rem', fontWeight: 600, cursor: 'pointer' }}>
+                  Ajouter
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Request Credit */}
+      {showCreditModal && (
+        <div style={modalOverlayStyle} onClick={() => setShowCreditModal(false)}>
+          <div style={modalStyle} onClick={e => e.stopPropagation()}>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#111a13', marginBottom: 24 }}>💰 Demander un crédit</h2>
+            <form onSubmit={handleCreditRequest} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div>
+                <label style={{ fontSize: '.875rem', fontWeight: 600, color: '#111a13', display: 'block', marginBottom: 8 }}>Montant demandé (FCFA)</label>
+                <input
+                  type="number"
+                  step="1000"
+                  value={creditData.requestedAmount}
+                  onChange={e => setCreditData({ ...creditData, requestedAmount: e.target.value })}
+                  placeholder="Ex: 500000"
+                  required
+                  style={{ width: '100%', padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: 8, fontSize: '.875rem', fontFamily: 'inherit', boxSizing: 'border-box' }}
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: '.875rem', fontWeight: 600, color: '#111a13', display: 'block', marginBottom: 8 }}>Raison de la demande</label>
+                <textarea
+                  value={creditData.reason}
+                  onChange={e => setCreditData({ ...creditData, reason: e.target.value })}
+                  placeholder="Décrivez comment vous allez utiliser ce crédit..."
+                  rows="4"
+                  required
+                  style={{ width: '100%', padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: 8, fontSize: '.875rem', fontFamily: 'inherit', boxSizing: 'border-box', resize: 'vertical' }}
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: '.875rem', fontWeight: 600, color: '#111a13', display: 'block', marginBottom: 8 }}>Durée du crédit (mois)</label>
+                <select
+                  value={creditData.duration}
+                  onChange={e => setCreditData({ ...creditData, duration: parseInt(e.target.value) })}
+                  style={{ width: '100%', padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: 8, fontSize: '.875rem', fontFamily: 'inherit' }}
+                >
+                  <option value="3">3 mois</option>
+                  <option value="6">6 mois</option>
+                  <option value="12">12 mois</option>
+                  <option value="24">24 mois</option>
+                </select>
+              </div>
+              <div>
+                <p style={{ fontSize: '.75rem', color: '#6b7280', marginBottom: 12 }}>
+                  💡 Votre score de crédit actuel est <span style={{ fontWeight: 600, color: '#006b3f' }}>{stats.creditScore}/1000</span>
+                </p>
+              </div>
+              <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
+                <button type="button" onClick={() => setShowCreditModal(false)} style={{ flex: 1, padding: '12px 16px', background: '#e5e7eb', color: '#374151', border: 'none', borderRadius: 8, fontSize: '.875rem', fontWeight: 600, cursor: 'pointer' }}>
+                  Annuler
+                </button>
+                <button type="submit" style={{ flex: 1, padding: '12px 16px', background: '#006b3f', color: 'white', border: 'none', borderRadius: 8, fontSize: '.875rem', fontWeight: 600, cursor: 'pointer' }}>
+                  Soumettre
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
     <div style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,.1)', overflow: 'hidden' }}>
       <div style={{ padding: '24px', borderBottom: '1px solid #e5e7eb' }}>
         <h2 style={{ fontSize: '1.125rem', fontWeight: 600, color: '#111a13' }}>Transactions récentes</h2>
