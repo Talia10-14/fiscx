@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { useAuthStore } from '../stores/authStore';
 import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
 import Card from '../components/Card';
+import { showSuccess, showError } from '../utils/toast';
 import api from '../api/client';
 
 export default function BankerDashboard() {
@@ -20,6 +23,7 @@ export default function BankerDashboard() {
   });
   const [loanRequests, setLoanRequests] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
   const [selectedLoan, setSelectedLoan] = useState(null);
   const [loanDecision, setLoanDecision] = useState({
     status: 'APPROVED',
@@ -35,13 +39,22 @@ export default function BankerDashboard() {
   const handleLoanDecision = async (e) => {
     e.preventDefault();
     try {
+      if (loanDecision.status === 'APPROVED' && (!loanDecision.approvedAmount || loanDecision.approvedAmount <= 0)) {
+        showError('Le montant approuvé doit être supérieur à 0');
+        return;
+      }
+      if (loanDecision.status === 'APPROVED' && (!loanDecision.interestRate || loanDecision.interestRate < 0)) {
+        showError('Le taux d\'intérêt doit être valide');
+        return;
+      }
       // TODO: Replace with API call
       // await api.post(`/banker/loans/${selectedLoan.id}/decision`, loanDecision);
-      alert(`Décision enregistrée: ${loanDecision.status === 'APPROVED' ? 'Approuvé' : 'Rejeté'}`);
+      showSuccess(`Décision enregistrée: ${loanDecision.status === 'APPROVED' ? '✅ Approuvé' : '❌ Rejeté'}`);
       setSelectedLoan(null);
       setLoanDecision({ status: 'APPROVED', approvedAmount: '', interestRate: 8, comment: '' });
     } catch (error) {
       console.error('Error making loan decision:', error);
+      showError('Erreur lors de l\'enregistrement de la décision');
     }
   };
 
@@ -359,8 +372,10 @@ export default function BankerDashboard() {
   };
 
   return (
-    <div style={{ display: 'flex', height: '100vh', background: '#f9fafb' }}>
-      <Sidebar />
+    <>
+      <ToastContainer />
+      <div style={{ display: 'flex', height: '100vh', background: '#f9fafb' }}>
+        <Sidebar />
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <Header />
         
@@ -517,5 +532,6 @@ export default function BankerDashboard() {
         </div>
       )}
     </div>
+    </>
   );
 }

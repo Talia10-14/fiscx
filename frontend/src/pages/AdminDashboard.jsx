@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { useAuthStore } from '../stores/authStore';
 import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
 import Card from '../components/Card';
+import { showSuccess, showError } from '../utils/toast';
 import api from '../api/client';
 
 export default function AdminDashboard() {
@@ -35,12 +38,17 @@ export default function AdminDashboard() {
   const handleUpdateTaxes = async (e) => {
     e.preventDefault();
     try {
+      if (taxData.synthetiqueTax <= 0 || taxData.patronalTax <= 0 || taxData.vat <= 0) {
+        showError('Tous les taux d\'impôt doivent être supérieurs à 0');
+        return;
+      }
       // TODO: Replace with API call
       // await api.post('/admin/tax-rates', taxData);
-      alert('Taux d\'impôt mis à jour avec succès !');
+      showSuccess('✅ Taux d\'impôt mis à jour avec succès !');
       setShowTaxModal(false);
     } catch (error) {
       console.error('Error updating tax rates:', error);
+      showError('Erreur lors de la mise à jour des taux');
     }
   };
 
@@ -263,8 +271,10 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div style={{ display: 'flex', height: '100vh', background: '#f9fafb' }}>
-      <Sidebar />
+    <>
+      <ToastContainer />
+      <div style={{ display: 'flex', height: '100vh', background: '#f9fafb' }}>
+        <Sidebar />
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <Header />
         
@@ -369,5 +379,6 @@ export default function AdminDashboard() {
         </div>
       )}
     </div>
+    </>
   );
 }

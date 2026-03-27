@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { useAuthStore } from '../stores/authStore';
 import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
 import Card from '../components/Card';
+import { showSuccess, showError } from '../utils/toast';
 import api from '../api/client';
 
 export default function DGIDashboard() {
@@ -41,26 +44,36 @@ export default function DGIDashboard() {
   const handleBilanDecision = async (e) => {
     e.preventDefault();
     try {
+      if (!bilanDecision.comment || bilanDecision.comment.trim().length === 0) {
+        showError('Un commentaire est requis');
+        return;
+      }
       // TODO: Replace with API call
       // await api.post(`/dgi/bilans/${selectedBilan.id}/verify`, bilanDecision);
-      alert(`Bilan ${bilanDecision.status === 'VERIFIED' ? 'certifié' : 'marqué non-conforme'}`);
+      showSuccess(`✅ Bilan ${bilanDecision.status === 'VERIFIED' ? 'certifié' : 'marqué non-conforme'}`);
       setSelectedBilan(null);
       setBilanDecision({ status: 'VERIFIED', comment: '' });
     } catch (error) {
       console.error('Error verifying bilan:', error);
+      showError('Erreur lors de la certification du bilan');
     }
   };
 
   const handleDeclarationDecision = async (e) => {
     e.preventDefault();
     try {
+      if (declarationDecision.status === 'REJECTED' && (!declarationDecision.taxAssessment || declarationDecision.taxAssessment <= 0)) {
+        showError('L\'évaluation fiscale doit être supérieure à 0');
+        return;
+      }
       // TODO: Replace with API call
       // await api.post(`/dgi/declarations/${selectedDeclaration.status}/approve`, declarationDecision);
-      alert(`Déclaration ${declarationDecision.status === 'APPROVED' ? 'approuvée' : 'rejetée'}`);
+      showSuccess(`${declarationDecision.status === 'APPROVED' ? '✅ Déclaration approuvée' : '❌ Déclaration rejetée'}`);
       setSelectedDeclaration(null);
       setDeclarationDecision({ status: 'APPROVED', taxAssessment: '', comment: '' });
     } catch (error) {
       console.error('Error making declaration decision:', error);
+      showError('Erreur lors du traitement de la déclaration');
     }
   };
 
@@ -310,8 +323,10 @@ export default function DGIDashboard() {
   };
 
   return (
-    <div style={{ display: 'flex', height: '100vh', background: '#f9fafb' }}>
-      <Sidebar />
+    <>
+      <ToastContainer />
+      <div style={{ display: 'flex', height: '100vh', background: '#f9fafb' }}>
+        <Sidebar />
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <Header />
         
@@ -504,5 +519,6 @@ export default function DGIDashboard() {
         </div>
       )}
     </div>
+    </>
   );
 }
