@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { FiCheck, FiAlertCircle, FiTrendingUp, FiUsers, FiBarChart2, FiFileText } from 'react-icons/fi';
+import { FiCheck, FiAlertCircle, FiTrendingUp, FiUsers, FiBarChart2, FiFileText, FiDollarSign } from 'react-icons/fi';
 import { useAuthStore } from '../stores/authStore';
 import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
@@ -51,7 +51,7 @@ export default function DGIDashboard() {
       }
       // TODO: Replace with API call
       // await api.post(`/dgi/bilans/${selectedBilan.id}/verify`, bilanDecision);
-      showSuccess(`✅ Bilan ${bilanDecision.status === 'VERIFIED' ? 'certifié' : 'marqué non-conforme'}`);
+      showSuccess(`Bilan ${bilanDecision.status === 'VERIFIED' ? 'certifié' : 'marqué non-conforme'}`);
       setSelectedBilan(null);
       setBilanDecision({ status: 'VERIFIED', comment: '' });
     } catch (error) {
@@ -69,7 +69,7 @@ export default function DGIDashboard() {
       }
       // TODO: Replace with API call
       // await api.post(`/dgi/declarations/${selectedDeclaration.status}/approve`, declarationDecision);
-      showSuccess(`${declarationDecision.status === 'APPROVED' ? '✅ Déclaration approuvée' : '❌ Déclaration rejetée'}`);
+      showSuccess(`${declarationDecision.status === 'APPROVED' ? 'Déclaration approuvée' : 'Déclaration rejetée'}`);
       setSelectedDeclaration(null);
       setDeclarationDecision({ status: 'APPROVED', taxAssessment: '', comment: '' });
     } catch (error) {
@@ -119,7 +119,10 @@ export default function DGIDashboard() {
       case 'bilans':
         return (
           <div>
-            <h2 style={{ fontSize: '1.875rem', fontWeight: 700, color: '#111a13', marginBottom: 24 }}>📝 Bilans SYSCOHADA</h2>
+            <h2 style={{ fontSize: '1.875rem', fontWeight: 700, color: '#111a13', marginBottom: 24, display: 'flex', alignItems: 'center' }}>
+              <FiFileText size={32} style={{ marginRight: 12 }} />
+              Bilans SYSCOHADA
+            </h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24, marginBottom: 32 }}>
               <div style={{ background: '#f0fdf4', borderRadius: 12, padding: 24, border: '2px solid #86efac' }}>
                 <p style={{ fontSize: '.875rem', color: '#6b7280', marginBottom: 8 }}>Bilans certifiés</p>
@@ -164,7 +167,10 @@ export default function DGIDashboard() {
       case 'declarations':
         return (
           <div>
-            <h2 style={{ fontSize: '1.875rem', fontWeight: 700, color: '#111a13', marginBottom: 24 }}>📋 Déclarations d'impôts</h2>
+            <h2 style={{ fontSize: '1.875rem', fontWeight: 700, color: '#111a13', marginBottom: 24, display: 'flex', alignItems: 'center' }}>
+              <FiFileText size={32} style={{ marginRight: 12 }} />
+              Déclarations d'impôts
+            </h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24, marginBottom: 32 }}>
               <div style={{ background: 'white', borderRadius: 12, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,.1)' }}>
                 <p style={{ fontSize: '.875rem', color: '#6b7280', marginBottom: 8 }}>À traiter</p>
@@ -279,17 +285,18 @@ export default function DGIDashboard() {
         return (
           <>
             <div style={{ marginBottom: 32 }}>
-              <h1 style={{ fontSize: '1.875rem', fontWeight: 700, color: '#111a13', marginBottom: 8 }}>
-                Tableau de bord DGI 📋
+              <h1 style={{ fontSize: '1.875rem', fontWeight: 700, color: '#111a13', marginBottom: 8, display: 'flex', alignItems: 'center' }}>
+                <FiFileText size={32} style={{ marginRight: 12 }} />
+                Tableau de bord DGI
               </h1>
               <p style={{ fontSize: '.9rem', color: '#6b7280' }}>Gestion des déclarations et conformité SYSCOHADA</p>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24, marginBottom: 32 }}>
-              <Card title="Commerçants enregistrés" value={stats.registeredMerchants} icon="👥" color="blue" />
-              <Card title="Revenu déclaré" value={formatCurrency(stats.declaredRevenue)} icon="💰" color="green" />
-              <Card title="Impôts collectés" value={formatCurrency(stats.taxCollected)} icon="🏦" color="purple" />
-              <Card title="Taux conformité" value={`${stats.complianceRate}%`} icon="✅" color="red" />
+              <Card title="Commerçants enregistrés" value={stats.registeredMerchants} icon={<FiUsers size={32} />} color="blue" />
+              <Card title="Revenu déclaré" value={formatCurrency(stats.declaredRevenue)} icon={<FiDollarSign size={32} />} color="green" />
+              <Card title="Impôts collectés" value={formatCurrency(stats.taxCollected)} icon={<FiBarChart2 size={32} />} color="purple" />
+              <Card title="Taux conformité" value={`${stats.complianceRate}%`} icon={<FiCheck size={32} />} color="red" />
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginBottom: 32 }}>
@@ -382,7 +389,10 @@ export default function DGIDashboard() {
       {selectedBilan && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }} onClick={() => setSelectedBilan(null)}>
           <div style={{ background: 'white', borderRadius: 16, padding: 32, maxWidth: 500, width: '90%', boxShadow: '0 20px 25px rgba(0,0,0,.15)' }} onClick={e => e.stopPropagation()}>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#111a13', marginBottom: 8 }}>📝 Certifier bilan SYSCOHADA</h2>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#111a13', marginBottom: 8, display: 'flex', alignItems: 'center' }}>
+              <FiFileText size={24} style={{ marginRight: 8 }} />
+              Certifier bilan SYSCOHADA
+            </h2>
             <p style={{ fontSize: '.875rem', color: '#6b7280', marginBottom: 24 }}>{selectedBilan.merchant} - Période: {selectedBilan.period}</p>
             
             <form onSubmit={handleBilanDecision} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -454,7 +464,10 @@ export default function DGIDashboard() {
       {selectedDeclaration && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }} onClick={() => setSelectedDeclaration(null)}>
           <div style={{ background: 'white', borderRadius: 16, padding: 32, maxWidth: 500, width: '90%', boxShadow: '0 20px 25px rgba(0,0,0,.15)' }} onClick={e => e.stopPropagation()}>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#111a13', marginBottom: 8 }}>📋 Valider déclaration</h2>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#111a13', marginBottom: 8, display: 'flex', alignItems: 'center' }}>
+              <FiFileText size={24} style={{ marginRight: 8 }} />
+              Valider déclaration
+            </h2>
             <p style={{ fontSize: '.875rem', color: '#6b7280', marginBottom: 24 }}>Statut: {selectedDeclaration.status} · Montant: {formatCurrency(selectedDeclaration.amount)}</p>
             
             <form onSubmit={handleDeclarationDecision} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>

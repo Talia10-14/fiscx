@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { FiBarChart2, FiUsers, FiSettings, FiFileText } from 'react-icons/fi';
+import { FiBarChart2, FiUsers, FiSettings, FiFileText, FiDollarSign } from 'react-icons/fi';
 import { useAuthStore } from '../stores/authStore';
 import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
@@ -45,7 +45,7 @@ export default function AdminDashboard() {
       }
       // TODO: Replace with API call
       // await api.post('/admin/tax-rates', taxData);
-      showSuccess('✅ Taux d\'impôt mis à jour avec succès !');
+      showSuccess('Taux d\'impôt mis à jour avec succès !');
       setShowTaxModal(false);
     } catch (error) {
       console.error('Error updating tax rates:', error);
@@ -149,7 +149,10 @@ export default function AdminDashboard() {
       case 'config':
         return (
           <div>
-            <h2 style={{ fontSize: '1.875rem', fontWeight: 700, color: '#111a13', marginBottom: 24 }}>⚙️ Configuration système</h2>
+            <h2 style={{ fontSize: '1.875rem', fontWeight: 700, color: '#111a13', marginBottom: 24, display: 'flex', alignItems: 'center' }}>
+              <FiSettings size={32} style={{ marginRight: 12 }} />
+              Configuration système
+            </h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24, marginBottom: 32 }}>
               <div style={{ background: 'white', borderRadius: 12, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,.1)' }}>
                 <h3 style={{ fontSize: '1rem', fontWeight: 600, color: '#111a13', marginBottom: 16 }}>Taux d'imposition</h3>
@@ -193,7 +196,10 @@ export default function AdminDashboard() {
       case 'audit':
         return (
           <div>
-            <h2 style={{ fontSize: '1.875rem', fontWeight: 700, color: '#111a13', marginBottom: 24 }}>📋 Journaux d'audit</h2>
+            <h2 style={{ fontSize: '1.875rem', fontWeight: 700, color: '#111a13', marginBottom: 24, display: 'flex', alignItems: 'center' }}>
+              <FiFileText size={32} style={{ marginRight: 12 }} />
+              Journaux d'audit
+            </h2>
             <div style={{ background: 'white', borderRadius: 12, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,.1)' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 {[
@@ -222,17 +228,18 @@ export default function AdminDashboard() {
         return (
           <>
             <div style={{ marginBottom: 32 }}>
-              <h1 style={{ fontSize: '1.875rem', fontWeight: 700, color: '#111a13', marginBottom: 8 }}>
-                Tableau de bord administrateur 👨‍💼
+              <h1 style={{ fontSize: '1.875rem', fontWeight: 700, color: '#111a13', marginBottom: 8, display: 'flex', alignItems: 'center' }}>
+                <FiSettings size={32} style={{ marginRight: 12 }} />
+                Tableau de bord administrateur
               </h1>
               <p style={{ fontSize: '.9rem', color: '#6b7280' }}>Gestion système et configuration</p>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24, marginBottom: 32 }}>
-              <Card title="Utilisateurs actifs" value={stats.totalUsers} icon="👥" color="blue" />
-              <Card title="Transactions en cours" value={stats.activeTransactions} icon="📊" color="green" />
-              <Card title="Revenu total" value={formatCurrency(stats.totalRevenue)} icon="💰" color="purple" />
-              <Card title="Santé système" value={`${stats.systemHealth}%`} icon="⚙️" color="red" />
+              <Card title="Utilisateurs actifs" value={stats.totalUsers} icon={<FiUsers size={32} />} color="blue" />
+              <Card title="Transactions en cours" value={stats.activeTransactions} icon={<FiBarChart2 size={32} />} color="green" />
+              <Card title="Revenu total" value={formatCurrency(stats.totalRevenue)} icon={<FiDollarSign size={32} />} color="purple" />
+              <Card title="Santé système" value={`${stats.systemHealth}%`} icon={<FiSettings size={32} />} color="red" />
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginBottom: 32 }}>
@@ -330,7 +337,10 @@ export default function AdminDashboard() {
       {showTaxModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }} onClick={() => setShowTaxModal(false)}>
           <div style={{ background: 'white', borderRadius: 16, padding: 32, maxWidth: 500, width: '90%', boxShadow: '0 20px 25px rgba(0,0,0,.15)' }} onClick={e => e.stopPropagation()}>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#111a13', marginBottom: 24 }}>⚙️ Mettre à jour les taux d'impôt</h2>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#111a13', marginBottom: 24, display: 'flex', alignItems: 'center' }}>
+              <FiSettings size={24} style={{ marginRight: 8 }} />
+              Mettre à jour les taux d'impôt
+            </h2>
             
             <form onSubmit={handleUpdateTaxes} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
               <div>

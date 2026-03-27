@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { FiDollarSign, FiCreditCard, FiBarChart2, FiStar, FiTrendingUp, FiPlus, FiUser, FiSettings, FiSearch, FiX, FiCheck, FiClock } from 'react-icons/fi';
+import { FiDollarSign, FiCreditCard, FiBarChart2, FiStar, FiTrendingUp, FiPlus, FiUser, FiSettings, FiSearch, FiX, FiCheck, FiFileText, FiUsers } from 'react-icons/fi';
 import { useAuthStore } from '../stores/authStore';
 import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
@@ -221,7 +221,7 @@ export default function MerchantDashboard() {
         </div>
         
         {loading ? (
-          <div style={{ padding: 24, textAlign: 'center', color: '#6b7280' }}>⏳ Chargement...</div>
+          <div style={{ padding: 24, textAlign: 'center', color: '#6b7280' }}>Chargement...</div>
         ) : paginatedTransactions.length > 0 ? (
           <>
             <div style={{ overflowX: 'auto' }}>
@@ -283,7 +283,10 @@ export default function MerchantDashboard() {
           </>
         ) : (
           <div style={{ padding: 24, textAlign: 'center', color: '#6b7280' }}>
-            <p style={{ fontSize: '1rem', marginBottom: 8 }}>📭 Aucune transaction</p>
+            <div style={{ fontSize: '1.5rem', marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <FiFileText size={32} />
+            </div>
+            <p style={{ fontSize: '1rem', marginBottom: 8 }}>Aucune transaction</p>
             <p style={{ fontSize: '.875rem', color: '#9ca3af' }}>{searchTerm ? 'Aucune transaction correspondant à votre recherche' : 'Commencez par enregistrer une transaction'}</p>
           </div>
         )}
@@ -380,15 +383,15 @@ export default function MerchantDashboard() {
                 <p style={{ fontSize: '.875rem', color: '#065f46', fontWeight: 600, marginBottom: 16 }}>Facteurs principaux</p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '.875rem', color: '#047857' }}>📊 CA moyen 3 mois</span>
+                    <span style={{ fontSize: '.875rem', color: '#047857', display: 'flex', alignItems: 'center', gap: 6 }}><FiBarChart2 size={16} /> CA moyen 3 mois</span>
                     <span style={{ fontSize: '.875rem', fontWeight: 600, color: '#047857' }}>214/300 pts</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '.875rem', color: '#047857' }}>📝 Régularité saisies</span>
+                    <span style={{ fontSize: '.875rem', color: '#047857', display: 'flex', alignItems: 'center', gap: 6 }}><FiFileText size={16} /> Régularité saisies</span>
                     <span style={{ fontSize: '.875rem', fontWeight: 600, color: '#047857' }}>200/250 pts</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '.875rem', color: '#047857' }}>✅ Taux annulation</span>
+                    <span style={{ fontSize: '.875rem', color: '#047857', display: 'flex', alignItems: 'center', gap: 6 }}><FiCheck size={16} /> Taux annulation</span>
                     <span style={{ fontSize: '.875rem', fontWeight: 600, color: '#047857' }}>170/200 pts</span>
                   </div>
                 </div>
@@ -399,7 +402,10 @@ export default function MerchantDashboard() {
       case 'settings':
         return (
           <div>
-            <h2 style={{ fontSize: '1.875rem', fontWeight: 700, color: '#111a13', marginBottom: 24 }}>⚙️ Paramètres</h2>
+            <h2 style={{ fontSize: '1.875rem', fontWeight: 700, color: '#111a13', marginBottom: 24, display: 'flex', alignItems: 'center' }}>
+              <FiSettings size={32} style={{ marginRight: 12 }} />
+              Paramètres
+            </h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
               <div style={{ background: 'white', borderRadius: 12, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,.1)' }}>
                 <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: '#111a13', marginBottom: 16 }}>Profil</h3>
@@ -442,18 +448,19 @@ export default function MerchantDashboard() {
           <>
             {/* Welcome Section */}
             <div style={{ marginBottom: 32 }}>
-              <h1 style={{ fontSize: '1.875rem', fontWeight: 700, color: '#111a13', marginBottom: 8 }}>
-                Bienvenue, {user?.firstName || 'Commerçant'} 👋
+              <h1 style={{ fontSize: '1.875rem', fontWeight: 700, color: '#111a13', marginBottom: 8, display: 'flex', alignItems: 'center' }}>
+                <FiUsers size={32} style={{ marginRight: 12 }} />
+                Bienvenue, {user?.firstName || 'Commerçant'}
               </h1>
               <p style={{ fontSize: '.9rem', color: '#6b7280' }}>Voici un aperçu de votre activité aujourd'hui</p>
             </div>
 
             {/* KPI Cards */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24, marginBottom: 32 }}>
-              <Card title="Chiffre d'affaires" value={formatCurrency(stats.dailyRevenue)} icon="💰" color="green" />
-              <Card title="Solde" value={formatCurrency(stats.balance)} icon="💳" color="blue" />
-              <Card title="Score de crédit" value={`${stats.creditScore}/1000`} icon="📊" color="purple" />
-              <Card title="Transactions" value={stats.transactionCount} icon="📝" color="red" />
+              <Card title="Chiffre d'affaires" value={formatCurrency(stats.dailyRevenue)} icon={<FiDollarSign size={32} />} color="green" />
+              <Card title="Solde" value={formatCurrency(stats.balance)} icon={<FiCreditCard size={32} />} color="blue" />
+              <Card title="Score de crédit" value={`${stats.creditScore}/1000`} icon={<FiStar size={32} />} color="purple" />
+              <Card title="Transactions" value={stats.transactionCount} icon={<FiFileText size={32} />} color="red" />
             </div>
 
             {/* Actions Section */}

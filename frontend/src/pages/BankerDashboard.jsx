@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { FiCheck, FiX, FiTrendingUp, FiUsers, FiFileText, FiBarChart2 } from 'react-icons/fi';
+import { FiCheck, FiX, FiTrendingUp, FiUsers, FiFileText, FiBarChart2, FiHome, FiAlertCircle } from 'react-icons/fi';
 import { useAuthStore } from '../stores/authStore';
 import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
@@ -50,7 +50,7 @@ export default function BankerDashboard() {
       }
       // TODO: Replace with API call
       // await api.post(`/banker/loans/${selectedLoan.id}/decision`, loanDecision);
-      showSuccess(`Décision enregistrée: ${loanDecision.status === 'APPROVED' ? '✅ Approuvé' : '❌ Rejeté'}`);
+      showSuccess(`Décision enregistrée: ${loanDecision.status === 'APPROVED' ? 'Approuvé' : 'Rejeté'}`);
       setSelectedLoan(null);
       setLoanDecision({ status: 'APPROVED', approvedAmount: '', interestRate: 8, comment: '' });
     } catch (error) {
@@ -321,17 +321,18 @@ export default function BankerDashboard() {
         return (
           <>
             <div style={{ marginBottom: 32 }}>
-              <h1 style={{ fontSize: '1.875rem', fontWeight: 700, color: '#111a13', marginBottom: 8 }}>
-                Tableau de bord banquier 🏦
+              <h1 style={{ fontSize: '1.875rem', fontWeight: 700, color: '#111a13', marginBottom: 8, display: 'flex', alignItems: 'center' }}>
+                <FiHome size={32} style={{ marginRight: 12 }} />
+                Tableau de bord banquier
               </h1>
               <p style={{ fontSize: '.9rem', color: '#6b7280' }}>Gestion des demandes de crédit et portefeuille</p>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24, marginBottom: 32 }}>
-              <Card title="Demandes en attente" value={stats.pendingLoans} icon="⏳" color="blue" />
-              <Card title="Crédits approuvés" value={stats.approvedLoans} icon="✅" color="green" />
-              <Card title="Portefeuille total" value={formatCurrency(stats.totalPortfolio)} icon="💼" color="purple" />
-              <Card title="Commerçants" value={stats.merchantCount} icon="👥" color="red" />
+              <Card title="Demandes en attente" value={stats.pendingLoans} icon={<FiAlertCircle size={32} />} color="blue" />
+              <Card title="Crédits approuvés" value={stats.approvedLoans} icon={<FiCheck size={32} />} color="green" />
+              <Card title="Portefeuille total" value={formatCurrency(stats.totalPortfolio)} icon={<FiBarChart2 size={32} />} color="purple" />
+              <Card title="Commerçants" value={stats.merchantCount} icon={<FiUsers size={32} />} color="red" />
             </div>
 
             <div style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,.1)', overflow: 'hidden' }}>
