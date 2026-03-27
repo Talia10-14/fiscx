@@ -166,7 +166,7 @@ const PhoneMockup = () => (
       <div style={{background:C.white,borderRadius:28,overflow:"hidden",aspectRatio:"9/19"}}>
         <div style={{background:"#F4F6F4",height:"100%",display:"flex",flexDirection:"column"}}>
           <div style={{background:C.green,padding:"40px 16px 20px",display:"flex",flexDirection:"column",gap:4}}>
-            <span style={{fontSize:".65rem",color:"rgba(255,255,255,.7)",fontWeight:500}}>Bonjour 👋</span>
+            <span style={{fontSize:".65rem",color:"rgba(255,255,255,.7)",fontWeight:500}}>Bonjour</span>
             <span style={{fontSize:".95rem",fontWeight:600,color:C.white}}>Afi Koudossou</span>
           </div>
           <div style={{margin:16,background:C.white,borderRadius:16,padding:14,boxShadow:"0 2px 12px rgba(0,0,0,.08)"}}>
@@ -265,17 +265,16 @@ const HowItWorks = () => (
     <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:0,position:"relative"}}>
       <div style={{position:"absolute",top:28,left:"calc(16.66% + 16px)",right:"calc(16.66% + 16px)",height:2,background:C.gray2}}/>
       {[
-        ["1","🛒","Saisir","Enregistrez chaque vente et dépense en 30 secondes. Fonctionne sans internet — synchronisation automatique dès que vous retrouvez le réseau MTN ou Moov."],
-        ["2","📄","Certifier","Votre bilan SYSCOHADA est généré automatiquement chaque mois. Chaque document porte un QR code vérifiable — impossible à falsifier."],
-        ["3","🏦","Emprunter","Accordez l'accès à votre banque en 1 tap. Votre dossier certifié part automatiquement. Le banquier voit 12 mois de données réelles."],
-      ].map(([num,icon,title,desc],i) => (
+        ["1","Saisir","Enregistrez chaque vente et dépense en 30 secondes. Fonctionne sans internet — synchronisation automatique dès que vous retrouvez le réseau MTN ou Moov."],
+        ["2","Certifier","Votre bilan SYSCOHADA est généré automatiquement chaque mois. Chaque document porte un QR code vérifiable — impossible à falsifier."],
+        ["3","Emprunter","Accordez l'accès à votre banque en 1 tap. Votre dossier certifié part automatiquement. Le banquier voit 12 mois de données réelles."],
+      ].map(([num,title,desc],i) => (
         <Reveal key={num} delay={i*0.1} style={{textAlign:"center",padding:"0 24px",position:"relative",zIndex:1}}>
           <div style={{width:56,height:56,borderRadius:"50%",background:C.white,border:`2px solid ${C.green}`,
             display:"flex",alignItems:"center",justifyContent:"center",fontSize:"1.1rem",fontWeight:700,
             color:C.green,margin:"0 auto 20px"}}>
             {num}
           </div>
-          <span style={{fontSize:"1.8rem",marginBottom:14,display:"block"}}>{icon}</span>
           <h3 style={{fontWeight:600,color:C.dark,marginBottom:8}}>{title}</h3>
           <p style={{fontSize:".875rem"}}>{desc}</p>
         </Reveal>
@@ -286,12 +285,12 @@ const HowItWorks = () => (
 
 // ── FEATURES ─────────────────────────────────────────────────
 const features = [
-  ["📶","Mode hors-ligne complet","Saisissez sans internet jusqu'à 72h. Tout se synchronise automatiquement dès que vous retrouvez le réseau MTN ou Moov Bénin."],
-  ["📦","Gestion du stock","Alertes automatiques quand un produit est en rupture. Inventaire en temps réel, calculé à partir de vos ventes."],
-  ["📊","Bilan SYSCOHADA certifié","Journal de caisse, compte de résultat et bilan annuel générés automatiquement. Format conforme à la DGI Bénin."],
-  ["🧮","Taxe Synthétique automatique","FiscX calcule votre impôt selon le Code Général des Impôts béninois. Mise à jour automatique après chaque Loi de Finances."],
-  ["🔐","QR code anti-falsification","Chaque bilan porte un QR code signé cryptographiquement. Le banquier vérifie en 10 secondes sur fiscx.bj/verify."],
-  ["🎙️","Saisie vocale","Enregistrez une vente en parlant à l'application. Français dès le lancement — Fon, Yoruba et Bariba en préparation."],
+  ["Mode hors-ligne complet","Saisissez sans internet jusqu'à 72h. Tout se synchronise automatiquement dès que vous retrouvez le réseau MTN ou Moov Bénin."],
+  ["Gestion du stock","Alertes automatiques quand un produit est en rupture. Inventaire en temps réel, calculé à partir de vos ventes."],
+  ["Bilan SYSCOHADA certifié","Journal de caisse, compte de résultat et bilan annuel générés automatiquement. Format conforme à la DGI Bénin."],
+  ["Taxe Synthétique automatique","FiscX calcule votre impôt selon le Code Général des Impôts béninois. Mise à jour automatique après chaque Loi de Finances."],
+  ["QR code anti-falsification","Chaque bilan porte un QR code signé cryptographiquement. Le banquier vérifie en 10 secondes sur fiscx.bj/verify."],
+  ["Saisie vocale","Enregistrez une vente en parlant à l'application. Français dès le lancement — Fon, Yoruba et Bariba en préparation."],
 ];
 
 const Features = () => (
@@ -432,15 +431,15 @@ const BankSection = () => (
           Pour la première fois, vous accédez à 12 mois de données comptables réelles d'un commerçant informel — vérifiées, infalsifiables, et consenties.
         </p>
         {[
-          ["🔐","Données certifiées — zéro falsification","Chaque bilan est signé cryptographiquement. Un scan QR suffit pour confirmer que les chiffres n'ont pas été altérés."],
-          ["✅","Consentement explicite et révocable","Vous n'accédez qu'aux dossiers expressément partagés. Le consentement est traçable et auditable pour la BCEAO."],
-          ["📊","Score BIC-UEMOA compatible","Le scoring FiscX est conforme aux directives du Bureau d'Information sur le Crédit — intégrable dans vos processus de décision."],
-        ].map(([icon,title,desc]) => (
+          ["Données certifiées — zéro falsification","Chaque bilan est signé cryptographiquement. Un scan QR suffit pour confirmer que les chiffres n'ont pas été altérés."],
+          ["Consentement explicite et révocable","Vous n'accédez qu'aux dossiers expressément partagés. Le consentement est traçable et auditable pour la BCEAO."],
+          ["Score BIC-UEMOA compatible","Le scoring FiscX est conforme aux directives du Bureau d'Information sur le Crédit — intégrable dans vos processus de décision."],
+        ].map(([title,desc]) => (
           <div key={title} style={{display:"flex",gap:16,alignItems:"flex-start",marginBottom:24}}>
             <div style={{width:44,height:44,borderRadius:10,background:"rgba(255,255,255,.08)",
               border:"1px solid rgba(255,255,255,.12)",display:"flex",alignItems:"center",
               justifyContent:"center",fontSize:"1.2rem",flexShrink:0}}>
-              {icon}
+              ✓
             </div>
             <div>
               <div style={{fontWeight:600,color:C.white,marginBottom:4}}>{title}</div>

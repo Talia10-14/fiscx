@@ -144,7 +144,10 @@ export default function BankerDashboard() {
       case 'requests':
         return (
           <div>
-            <h2 style={{ fontSize: '1.875rem', fontWeight: 700, color: '#111a13', marginBottom: 24 }}>⏳ Demandes en attente</h2>
+            <h2 style={{ fontSize: '1.875rem', fontWeight: 700, color: '#111a13', marginBottom: 24, display: 'flex', alignItems: 'center' }}>
+              <FiAlertCircle size={32} style={{ marginRight: 12 }} />
+              Demandes en attente
+            </h2>
             <div style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,.1)', overflow: 'hidden' }}>
               {loading ? (
                 <div style={{ padding: 24, textAlign: 'center', color: '#6b7280' }}>Chargement...</div>
@@ -258,7 +261,10 @@ export default function BankerDashboard() {
       case 'merchants':
         return (
           <div>
-            <h2 style={{ fontSize: '1.875rem', fontWeight: 700, color: '#111a13', marginBottom: 24 }}>👥 Commerçants</h2>
+            <h2 style={{ fontSize: '1.875rem', fontWeight: 700, color: '#111a13', marginBottom: 24, display: 'flex', alignItems: 'center' }}>
+              <FiUsers size={32} style={{ marginRight: 12 }} />
+              Commerçants
+            </h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24, marginBottom: 32 }}>
               <div style={{ background: 'white', borderRadius: 12, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,.1)' }}>
                 <p style={{ fontSize: '.875rem', color: '#6b7280', marginBottom: 8 }}>Total commerçants</p>

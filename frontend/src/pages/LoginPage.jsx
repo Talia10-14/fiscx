@@ -285,7 +285,7 @@ export function LoginPage({ onSwitch }) {
       }
       right={
         <>
-          <h1 style={{ fontSize:"1.7rem", fontWeight:700, color:C.dark, letterSpacing:"-.02em", marginBottom:6 }}>Bon retour 👋</h1>
+          <h1 style={{ fontSize:"1.7rem", fontWeight:700, color:C.dark, letterSpacing:"-.02em", marginBottom:6 }}>Bon retour</h1>
           <p style={{ fontSize:".9rem", color:C.gray3, marginBottom:32 }}>Entrez votre numéro et votre PIN pour accéder à votre compte FiscX.</p>
 
           {error && <Alert type="error">{error}</Alert>}
@@ -506,7 +506,7 @@ function SignupStep3({ onSubmit }) {
   const [avatarUrl, setAvatarUrl] = useState("");
   const fileRef = useRef(null);
 
-  const activities = ["🛒 Commerçant","🔨 Artisan","📋 Prestataire","🌾 Agriculteur"];
+  const activities = ["Commerçant","Artisan","Prestataire","Agriculteur"];
   const pinStrength = () => {
     if(pin.length < 6) return null;
     if(/^(.)\1+$/.test(pin) || /^(012345|123456|234567|345678|456789|987654)/.test(pin)) return "weak";

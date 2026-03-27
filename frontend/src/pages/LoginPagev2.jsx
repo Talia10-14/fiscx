@@ -25,9 +25,9 @@ export default function LoginPagev2() {
 
   const roles = [
     { id: "MERCHANT", label: "🛍️ Commerçant", color: C.green },
-    { id: "BANKER", label: "🏦 Banquier", color: "#1e40af" },
-    { id: "ADMIN", label: "👨‍💼 Admin", color: "#7c3aed" },
-    { id: "DGI", label: "📋 DGI Agent", color: "#dc2626" },
+    { id: "BANKER", label: "Banquier", color: "#1e40af" },
+    { id: "ADMIN", label: "Admin", color: "#9333ea" },
+    { id: "DGI", label: "DGI Agent", color: "#dc2626" },
   ];
 
   const handleLogin = async () => {
