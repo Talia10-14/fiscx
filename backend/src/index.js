@@ -1,7 +1,6 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
 import 'express-async-errors';
 import pino from 'pino';
 import pinoHttp from 'pino-http';
@@ -14,12 +13,16 @@ import { requestLogger } from './middleware/requestLogger.js';
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/users.js';
 import transactionRoutes from './routes/transactions.js';
+import productsRoutes from './routes/products.js';
 import stockRoutes from './routes/stock.js';
+import syncRoutes from './routes/sync.js';
 import taxRoutes from './routes/tax.js';
 import creditRoutes from './routes/credit.js';
 import loanRoutes from './routes/loans.js';
 import adminRoutes from './routes/admin.js';
 import healthRoutes from './routes/health.js';
+import { verifyAllMerchantChains } from './services/hashChainMonitor.js';
+import { rateLimitAuth, rateLimitGlobal } from './middleware/rateLimit.js';
 
 dotenv.config();
 
@@ -49,16 +52,10 @@ app.use(cors({
   credentials: true
 }));
 
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || 900000),
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || 100),
-  message: 'Too many requests from this IP, please try again later.'
-});
-
-if (process.env.RATE_LIMIT_ENABLED === 'true') {
-  app.use('/api/', limiter);
-}
+// Rate limiting (SESSION 0B)
+app.use('/api/', rateLimitGlobal);
+app.use('/api/auth/login', rateLimitAuth);
+app.use('/api/auth/register', rateLimitAuth);
 
 // Body parsers
 app.use(express.json({ limit: '10mb' }));
@@ -74,7 +71,9 @@ app.use('/api/health', healthRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/transactions', transactionRoutes);
+app.use('/api/products', productsRoutes);
 app.use('/api/stock', stockRoutes);
+app.use('/api/sync', syncRoutes);
 app.use('/api/tax', taxRoutes);
 app.use('/api/credit', creditRoutes);
 app.use('/api/loans', loanRoutes);
@@ -98,6 +97,48 @@ const server = app.listen(PORT, () => {
   logger.info(`🚀 FiscX Backend running on port ${PORT} [${NODE_ENV}]`);
   logger.info(`📊 Environment: ${NODE_ENV}`);
   logger.info(`🔐 API URL: http://localhost:${PORT}`);
+});
+
+// CDC §6.5 — periodic hash-chain verification (default every 6h)
+const HASH_VERIFY_INTERVAL_MS = parseInt(
+  process.env.HASH_VERIFY_INTERVAL_MS || `${6 * 60 * 60 * 1000}`,
+  10
+);
+if (process.env.HASH_VERIFY_ENABLED !== 'false') {
+  setTimeout(async () => {
+    const report = await verifyAllMerchantChains();
+    if (!report.success || report.brokenCount > 0) {
+      logger.warn({ report }, 'Hash chain verification reported issues');
+    } else {
+      logger.info(
+        { checkedChains: report.checkedChains, checkedRows: report.checkedRows },
+        'Initial hash chain verification completed'
+      );
+    }
+  }, 30 * 1000);
+
+  setInterval(async () => {
+    const report = await verifyAllMerchantChains();
+    if (!report.success || report.brokenCount > 0) {
+      logger.warn({ report }, 'Hash chain verification reported issues');
+    } else {
+      logger.info(
+        { checkedChains: report.checkedChains, checkedRows: report.checkedRows },
+        'Periodic hash chain verification completed'
+      );
+    }
+  }, HASH_VERIFY_INTERVAL_MS);
+}
+
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    logger.error(
+      `Port ${PORT} is already in use — stop the other process (old node, Docker backend) or set PORT=3001 in .env`
+    );
+  } else {
+    logger.error(err);
+  }
+  process.exit(1);
 });
 
 // Graceful shutdown

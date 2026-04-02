@@ -1,51 +1,69 @@
+import { PrismaClient } from '@prisma/client';
+import { extractToken, verifyToken } from '../utils/jwt.js';
+
+const prisma = new PrismaClient();
+
 /**
- * Authentication middleware
- * Verifies JWT token and sets req.user
+ * JWT + chargement utilisateur (merchantId pour les commerçants).
  */
-export const authenticate = (req, res, next) => {
-  const token = req.headers.authorization?.split(' ')[1];
-  
-  if (!token) {
+export const authenticate = async (req, res, next) => {
+  try {
+    const token = extractToken(req.headers.authorization);
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: 'No authorization token provided',
+      });
+    }
+    const decoded = verifyToken(token, 'access');
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.userId },
+      include: { merchant: true },
+    });
+    if (!user) {
+      return res.status(401).json({ success: false, message: 'User not found' });
+    }
+    req.user = {
+      id: user.id,
+      role: user.role,
+      merchantId: user.merchant?.id ?? null,
+      phone: user.phone,
+    };
+    next();
+  } catch {
     return res.status(401).json({
       success: false,
-      message: 'No authorization token provided'
-    });
-  }
-  
-  try {
-    // TODO: Verify JWT
-    req.user = { id: 'user-id' }; // Placeholder
-    next();
-  } catch (error) {
-    res.status(401).json({
-      success: false,
-      message: 'Invalid token'
+      message: 'Invalid or expired token',
     });
   }
 };
 
-/**
- * Authorization middleware
- * Checks if user has required role
- */
-export const authorize = (...roles) => {
-  return (req, res, next) => {
+// Alias expected by VIBE docs
+export const authMiddleware = authenticate;
+
+export const requireMerchant = (req, res, next) => {
+  if (req.user?.role !== 'MERCHANT' || !req.user.merchantId) {
+    return res.status(403).json({
+      success: false,
+      message: 'Merchant access required',
+    });
+  }
+  next();
+};
+
+export const authorize =
+  (...roles) =>
+  (req, res, next) => {
     if (!req.user) {
-      return res.status(401).json({
-        success: false,
-        message: 'Not authenticated'
-      });
+      return res.status(401).json({ success: false, message: 'Not authenticated' });
     }
-    
     if (!roles.includes(req.user.role)) {
       return res.status(403).json({
         success: false,
         message: 'Insufficient permissions',
         required: roles,
-        current: req.user.role
+        current: req.user.role,
       });
     }
-    
     next();
   };
-};

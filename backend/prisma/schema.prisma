@@ -16,7 +16,9 @@ model User {
   id                String   @id @default(cuid())
   phone             String   @unique // Phone number +229...
   pin               String   // Hashed PIN (bcrypt)
+  pinHash           String?  // VIBE alias: pin_hash
   role              UserRole @default(MERCHANT) // MERCHANT, BANKER, ADMIN, DGI, COMPTABLE, KYC_PARTNER
+  kycStatus         String   @default("PENDING")
   firstName         String?
   lastName          String?
   businessName      String?
@@ -38,6 +40,7 @@ model User {
   loans             Loan[]
   auditLogs         AuditLog[]
   credentials       Credential[]
+  documents         Document[]
 
   @@index([phone])
   @@index([role])
@@ -82,6 +85,8 @@ model Merchant {
   transactions      Transaction[]
   loans             Loan[]
   certs             Certificate[]
+  comptableLinks    ComptableClient[]
+  products          Product[]
   
   @@index([userID])
   @@index([creditScore])
@@ -189,43 +194,68 @@ enum CredType {
 
 model Transaction {
   id                String   @id @default(cuid())
+  clientUUID        String?  @unique // VIBE: idempotence client_uuid
   merchantID        String
   merchant          Merchant @relation(fields: [merchantID], references: [id], onDelete: Restrict)
   
   userID            String   // Who created it
   user              User     @relation(fields: [userID], references: [id], onDelete: Restrict)
   
-  type              TransactionType // VENTE, DÉPENSE, RETRAIT, etc.
-  amount            Float    // Always positive, sign in type
+  type              TransactionType // VENTE, DEPENSE, ANNULATION (reversal), etc.
+  amount            Float    // Always positive; annulation = même montant que l’écriture annulée
   currency          String   @default("XOF") // FCFA
   
-  category          String?  // "Marché", "Boutique", "Atelier", etc.
+  category          String?  // Loyer, Stock, Transport… (CDC §3.1)
   description       String?
   
   receiptPhoto      String?  // WebP base64 or path
+  receiptURL        String?  // VIBE alias: receipt_url
   
   status            TransactionStatus @default(CONFIRMED)
   
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
+  createdOfflineAt  DateTime?
+  syncedAt          DateTime @default(now())
   
   // Certification
   certID            String?
   
-  // No deletions allowed - mark as CANCELLED instead
+  // Immuabilité — annulation (CDC §3.1.2) : lien vers la transaction d’origine
+  reversalOfId      String?
+  originalTransactionID String? // VIBE alias: original_transaction_id
+  reversalOf        Transaction?  @relation("TxnReversal", fields: [reversalOfId], references: [id], onDelete: Restrict)
+  reversedBy        Transaction[] @relation("TxnReversal")
+
+  // Vente liée produit (CDC §3.1 / 3.2)
+  productId         String?
+  product           Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  quantity          Int?
+  unitPrice         Float?
+
+  // Hash chain (CDC §6.5) — détecte toute altération rétroactive
+  prevHash          String?
+  hashChain         String?
   
   @@index([merchantID])
   @@index([userID])
   @@index([createdAt])
   @@index([type])
+  @@index([reversalOfId])
+  @@index([productId])
+  @@index([prevHash])
+  @@index([hashChain])
 }
 
 enum TransactionType {
   VENTE       // Sale
-  DÉPENSE     // Expense
+  DEPENSE     // Expense (Dépense)
   RETRAIT     // Withdrawal
-  DÉPÔT       // Deposit
+  DEPOT       // Deposit (Dépôt)
   REMBOURSEMENT // Repayment
+  ANNULATION  // Écriture d’annulation (CDC §3.1.2) — ne supprime pas l’historique
+  PURCHASE    // SESSION 2 — entrée stock (quantité sur la transaction)
+  STOCK_ADJUSTMENT // SESSION 2 — ajustement inventaire signé
 }
 
 enum TransactionStatus {
@@ -240,17 +270,24 @@ enum TransactionStatus {
 model Product {
   id                String   @id @default(cuid())
   merchantID        String
+  merchant          Merchant @relation(fields: [merchantID], references: [id], onDelete: Cascade)
   
   name              String
+  unit              String?
   sku               String?
   quantity          Int      @default(0)
-  unitPrice         Float    // FCFA
+  unitPrice         Float    // Prix de vente FCFA
+  salePrice         Float?   // VIBE alias: sale_price
+  costPrice         Float?   // Prix de revient (CDC §3.2)
   
   minAlertLevel     Int      @default(5)
+  alertThreshold    Float?   // VIBE alias: alert_threshold
   alertSent         Boolean  @default(false)
   
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
+
+  transactions      Transaction[]
   
   @@unique([merchantID, sku])
   @@index([merchantID])
@@ -267,6 +304,8 @@ model Loan {
   requester         User     @relation(fields: [requesterID], references: [id], onDelete: Restrict)
   
   bankName          String?
+  bankID            String?
+  bank              Bank?    @relation(fields: [bankID], references: [id], onDelete: SetNull)
   loanAmount        Float
   currency          String   @default("XOF")
   
@@ -280,6 +319,7 @@ model Loan {
   approvedAt        DateTime?
   rejectedAt        DateTime?
   rejectionReason   String?
+  dossierURL        String?
   
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
@@ -306,7 +346,7 @@ model Certificate {
   merchantID        String
   merchant          Merchant @relation(fields: [merchantID], references: [id], onDelete: Restrict)
   
-  type              CertType // JOURNAL, COMPTE_DE_RÉSULTAT, BILAN, DÉCLARATION_TS
+  type              CertType // JOURNAL, COMPTE_DE_RESULTAT, BILAN, DECLARATION_TS
   period            String   // "2026-01", "2026-Q1", "2026"
   
   // Content
@@ -330,9 +370,9 @@ model Certificate {
 
 enum CertType {
   JOURNAL              // Journal de caisse
-  COMPTE_DE_RÉSULTAT   // Income statement
+  COMPTE_DE_RESULTAT   // Income statement (Compte de résultat)
   BILAN                // Balance sheet
-  DÉCLARATION_TS       // Tax declaration
+  DECLARATION_TS       // Tax declaration (Déclaration TS)
   BORDEREAU_VERSEMENT  // Payment note
 }
 
@@ -341,6 +381,32 @@ enum CertStatus {
   PENDING
   SIGNED
   REJECTED
+}
+
+// ── TAX RULES (CDC §3.3.1 — barèmes en base, sans redéploiement) ──
+
+model TaxRule {
+  id                   String    @id @default(cuid())
+  countryCode          String    @default("BJ")
+  country              String?   // VIBE alias
+  year                 Int
+  regime               TaxRegime
+  regimeName           String?   // VIBE alias
+  label                String
+  minAnnualCA          Float?    // Seuil bas (FCFA/an), null = sans borne
+  caMin                Float?    // VIBE alias
+  maxAnnualCA          Float?    // Seuil haut exclus ou inclus selon moteur ; null = illimité
+  caMax                Float?    // VIBE alias
+  syntheticRatePercent Float?    // TS — taux indicatif sur CA ou marge (selon label)
+  rate                 Float?    // VIBE alias
+  fixedAmount          Float?    // VIBE alias
+  rrsRatePercent       Float?    // RRS simplifié — placeholder
+  notes                String?
+  active               Boolean   @default(true)
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  @@index([countryCode, year, regime])
 }
 
 // ── FISCAL DATA ──
@@ -380,9 +446,16 @@ model CreditScore {
   merchantID        String
   
   score             Int      // 0-1000
+  total             Int?     // VIBE alias
+  scoreRevenue      Int?
+  scoreRegularity   Int?
+  scoreCancellation Int?
+  scoreSeniority    Int?
+  scoreDiversity    Int?
   breakdown         CreditScoreBreakdown[]
   
   calculatedAt      DateTime @default(now())
+  computedAt        DateTime?
   
   @@index([merchantID])
   @@index([calculatedAt])
@@ -409,13 +482,17 @@ model AuditLog {
   user              User     @relation(fields: [userID], references: [id], onDelete: Restrict)
   
   action            String   // "LOGIN", "CREATE_TX", "VERIFY_QR", etc.
+  entityID          String?
   resource          String?  // What was acted upon
   resourceID        String?
   
   status            String   @default("SUCCESS") // SUCCESS, FAILED
   details           String?  // JSON serialized
+  oldValue          Json?
+  newValue          Json?
   
   ipAddress         String?
+  deviceUUID        String?
   userAgent         String?
   
   createdAt         DateTime @default(now())
@@ -473,4 +550,46 @@ model Config {
   updatedAt         DateTime @updatedAt
   
   @@index([key])
+}
+
+enum ConsentStatus {
+  ACTIVE
+  REVOKED
+  EXPIRED
+}
+
+model Bank {
+  id                String   @id @default(cuid())
+  name              String
+  webhookURL        String?
+  status            String   @default("ACTIVE")
+  createdAt         DateTime @default(now())
+  loans             Loan[]
+}
+
+model Consent {
+  id                String        @id @default(cuid())
+  merchantID        String
+  bankerID          String
+  scope             String
+  status            ConsentStatus @default(ACTIVE)
+  expiresAt         DateTime
+  revokedAt         DateTime?
+  createdAt         DateTime      @default(now())
+
+  @@index([merchantID])
+  @@index([bankerID])
+}
+
+model Document {
+  id                String   @id @default(cuid())
+  userID            String
+  user              User     @relation(fields: [userID], references: [id], onDelete: Cascade)
+  type              String
+  url               String
+  hashSHA256        String
+  qrToken           String   @unique
+  generatedAt       DateTime @default(now())
+
+  @@index([userID])
 }

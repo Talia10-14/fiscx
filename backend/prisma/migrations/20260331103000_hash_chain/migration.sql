@@ -1,0 +1,3 @@
+-- Placeholder migration file restored to satisfy Prisma migration history.
+-- Hash-chain columns are managed by:
+--   20260331103000_hash_chain_transactions/migration.sql
